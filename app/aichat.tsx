@@ -1,6 +1,3 @@
-
-
-
 import React, { useState } from 'react';
 import {
   AppBar,
@@ -16,29 +13,43 @@ import {
   Snackbar,
 } from '@mui/material';
 
+interface Message {
+    text: string;
+    role: string;
+  }
+
 const ChatApp = () => {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
 
   const handleSendMessage = async () => {
     try {
       setLoading(true); // Show loading spinner
-      setError(null); // Clear any previous errors
+      setError(''); // Clear any previous errors
   
       // Make the API call with the user's input
       const response = await fetch(`http://localhost:3000/api/proxy?query=${inputText}`);
-    //   const response = await fetch(`https://hooks.zapier.com/hooks/catch/5720881/3ju58ip/query=${inputText}`);
-    //   https://worker-sparkling-star-5ba6.elmunoz42.workers.dev/?query=hello
-    //   const response = await fetch(`https://worker-sparkling-star-5ba6.elmunoz42.workers.dev/?query=hello`);
-
       if (!response.ok) {
         throw new Error('API request failed'); // Handle non-200 responses
       }
   
       const data = await response.json(); // Parse the response JSON
-      setMessages([...messages, { text: data.message, isUser: true }]);
+      console.log('response data:', data);
+  
+      // Update the state to include the new messages from the response
+    setMessages((prevMessages: { text: string, role: string }[]) => [
+        ...prevMessages,
+        ...data[0].inputs.messages.map((msg: any) => ({
+            text: msg.content,
+            role: msg.role,
+        })),
+        {
+            text: data[0].response.response,
+            role: 'ai',
+        },
+    ]);
     } catch (error) {
       setError('Error fetching data'); // Handle API call errors
     } finally {
@@ -59,7 +70,7 @@ const ChatApp = () => {
             <ListItem key={index} alignItems="flex-start">
               <ListItemText
                 primary={msg.text}
-                secondary={msg.isUser ? 'You' : 'ChatGPT'}
+                secondary={msg.role === 'user' ? 'You' : msg.role === 'system' ? 'System' : 'ChatGPT'}
               />
             </ListItem>
           ))}
