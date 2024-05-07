@@ -1,7 +1,5 @@
 
 
-//// COPIED FROM COPILOT NEED TO SETUP
-
 
 import React, { useState } from 'react';
 import {
@@ -30,7 +28,11 @@ const ChatApp = () => {
       setError(null); // Clear any previous errors
   
       // Make the API call with the user's input
-      const response = await fetch(`https://llama2-query-responder.fountain-city.workers.dev/?query=${inputText}`);
+      const response = await fetch(`http://localhost:3000/api/proxy?query=${inputText}`);
+    //   const response = await fetch(`https://hooks.zapier.com/hooks/catch/5720881/3ju58ip/query=${inputText}`);
+    //   https://worker-sparkling-star-5ba6.elmunoz42.workers.dev/?query=hello
+    //   const response = await fetch(`https://worker-sparkling-star-5ba6.elmunoz42.workers.dev/?query=hello`);
+
       if (!response.ok) {
         throw new Error('API request failed'); // Handle non-200 responses
       }
