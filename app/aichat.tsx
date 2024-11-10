@@ -58,10 +58,10 @@ const ChatApp = () => {
   };
 
   return (
-    <div>
+    <div style={{maxWidth: '900px'}}>
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6">ChatGPT Clone</Typography>
+          <Typography variant="h6">Llama Text Interface</Typography>
         </Toolbar>
       </AppBar>
       <Paper elevation={3} style={{ height: '400px', overflowY: 'auto' }}>
@@ -82,6 +82,7 @@ const ChatApp = () => {
         fullWidth
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}
+        style={{ margin: '16px 0' }}
       />
       <Button
         variant="contained"
