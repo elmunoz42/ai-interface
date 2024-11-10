@@ -64,7 +64,7 @@ const ChatApp = () => {
           <Typography variant="h6">Llama Text Interface</Typography>
         </Toolbar>
       </AppBar>
-      <Paper elevation={3} style={{ height: '400px', overflowY: 'auto' }}>
+      <Paper elevation={3} style={{ height: '800px', width: '800px', overflowY: 'auto' }}>
         <List>
           {messages.map((msg, index) => (
             <ListItem key={index} alignItems="flex-start">
