@@ -39,17 +39,19 @@ const ChatApp = () => {
       console.log('response data:', data);
   
       // Update the state to include the new messages from the response
-    setMessages((prevMessages: { text: string, role: string }[]) => [
+      setMessages((prevMessages: { text: string, role: string }[]) => [
         ...prevMessages,
         ...data[0].inputs.messages.map((msg: any) => ({
-            text: msg.content,
-            role: msg.role,
+          text: msg.content,
+          role: msg.role,
         })),
         {
-            text: data[0].response.response,
-            role: 'ai',
+          text: data[0].response.response,
+          role: 'ai',
         },
-    ]);
+      ]);
+      // Clear the input field
+      setInputText('');
     } catch (error) {
       setError('Error fetching data'); // Handle API call errors
     } finally {
@@ -64,13 +66,13 @@ const ChatApp = () => {
           <Typography variant="h6">Llama Text Interface</Typography>
         </Toolbar>
       </AppBar>
-      <Paper elevation={3} style={{ height: '800px', width: '800px', overflowY: 'auto' }}>
+      <Paper elevation={3} style={{ height: '600px', width: '800px', overflowY: 'auto' }}>
         <List>
           {messages.map((msg, index) => (
             <ListItem key={index} alignItems="flex-start">
               <ListItemText
                 primary={msg.text}
-                secondary={msg.role === 'user' ? 'You' : msg.role === 'system' ? 'System' : 'ChatGPT'}
+                secondary={msg.role === 'user' ? 'You' : msg.role === 'system' ? 'System' : 'Bot'}
               />
             </ListItem>
           ))}
@@ -78,7 +80,7 @@ const ChatApp = () => {
       </Paper>
       <TextField
         label="Type your message"
-        variant="outlined"
+        // variant="outlined"
         fullWidth
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}

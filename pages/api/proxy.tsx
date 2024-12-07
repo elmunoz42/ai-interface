@@ -38,6 +38,7 @@ const handler = router
     const query = new URLSearchParams(req.query as Record<string, string>).toString();
 
     // Include the query parameters in the request to the external API
+    // const response = await fetch(`https://llama3-8b-instruct.fountain-city.workers.dev/?${query}`);
     const response = await fetch(`https://worker-sparkling-star-5ba6.elmunoz42.workers.dev/?${query}`);
     const data = await response.json();
     res.json(data);
