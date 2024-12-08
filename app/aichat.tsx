@@ -14,9 +14,9 @@ import {
 } from '@mui/material';
 
 interface Message {
-    text: string;
-    role: string;
-  }
+  text: string;
+  role: string;
+}
 
 const ChatApp = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -25,78 +25,132 @@ const ChatApp = () => {
   const [error, setError] = useState('');
 
   const handleSendMessage = async () => {
+    if (!inputText.trim()) return;
+
     try {
-      setLoading(true); // Show loading spinner
-      setError(''); // Clear any previous errors
-  
-      // Make the API call with the user's input
-      const response = await fetch(`http://localhost:3000/api/proxy?query=${inputText}`);
-      if (!response.ok) {
-        throw new Error('API request failed'); // Handle non-200 responses
-      }
-  
-      const data = await response.json(); // Parse the response JSON
-      console.log('response data:', data);
-  
-      // Update the state to include the new messages from the response
-      setMessages((prevMessages: { text: string, role: string }[]) => [
+      setLoading(true);
+      setError('');
+
+      // Add user message immediately for better UX
+      setMessages(prevMessages => [
         ...prevMessages,
-        ...data[0].inputs.messages.map((msg: any) => ({
-          text: msg.content,
-          role: msg.role,
-        })),
+        { text: inputText, role: 'user' }
+      ]);
+
+      const response = await fetch('http://localhost:3000/api/proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: inputText })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch response');
+      }
+
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      // Add AI response
+      setMessages(prevMessages => [
+        ...prevMessages,
         {
           text: data[0].response.response,
           role: 'ai',
-        },
+        }
       ]);
-      // Clear the input field
+
       setInputText('');
     } catch (error) {
-      setError('Error fetching data'); // Handle API call errors
+      console.error('Error in handleSendMessage:', error);
+      setError(error.message || 'Error fetching data');
     } finally {
-      setLoading(false); // Hide loading spinner
+      setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      handleSendMessage();
     }
   };
 
   return (
-    <div style={{maxWidth: '900px'}}>
+    <div style={{ maxWidth: '900px' }}>
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6">Llama Text Interface</Typography>
         </Toolbar>
       </AppBar>
-      <Paper elevation={3} style={{ height: '600px', width: '800px', overflowY: 'auto' }}>
+      <Paper 
+        elevation={3} 
+        style={{ 
+          height: '600px', 
+          width: '800px', 
+          overflowY: 'auto',
+          padding: '16px' 
+        }}
+      >
         <List>
           {messages.map((msg, index) => (
-            <ListItem key={index} alignItems="flex-start">
-              <ListItemText
-                primary={msg.text}
-                secondary={msg.role === 'user' ? 'You' : msg.role === 'system' ? 'System' : 'Bot'}
-              />
+            <ListItem 
+              key={index} 
+              alignItems="flex-start"
+              style={{
+                justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                padding: '8px 0'
+              }}
+            >
+              <Paper 
+                elevation={1}
+                style={{
+                  padding: '8px 16px',
+                  maxWidth: '80%',
+                  backgroundColor: msg.role === 'user' ? '#e3f2fd' : '#f5f5f5'
+                }}
+              >
+                <ListItemText
+                  primary={msg.text}
+                  secondary={msg.role === 'user' ? 'You' : 'Assistant'}
+                  secondaryTypographyProps={{
+                    style: { fontSize: '0.8rem', opacity: 0.7 }
+                  }}
+                />
+              </Paper>
             </ListItem>
           ))}
         </List>
       </Paper>
       <TextField
         label="Type your message"
-        // variant="outlined"
         fullWidth
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}
+        onKeyPress={handleKeyPress}
         style={{ margin: '16px 0' }}
+        multiline
+        maxRows={4}
+        disabled={loading}
       />
       <Button
         variant="contained"
         color="primary"
         onClick={handleSendMessage}
-        disabled={loading}
+        disabled={loading || !inputText.trim()}
       >
-        Send
+        {loading ? 'Sending...' : 'Send'}
       </Button>
-      {loading && <CircularProgress />}
+      {loading && <CircularProgress style={{ marginLeft: '16px' }} />}
       {error && (
-        <Snackbar open autoHideDuration={3000} message={error} />
+        <Snackbar 
+          open={!!error} 
+          autoHideDuration={3000} 
+          message={error}
+          onClose={() => setError('')}
+        />
       )}
     </div>
   );
