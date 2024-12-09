@@ -5,7 +5,7 @@ A Next.js application that provides a chat interface for interacting with local 
 ## Prerequisites
 
 - Node.js (v18 or later)
-- The main branch workis with a free llama 2 endpoint hosted at Cloudflare PLEASE DON'T OVERUSE THE TOKENS.
+- The main branch works with a llama 2 endpoint hosted at Cloudflare PLEASE DON'T OVERUSE THE TOKENS.
 - For the local branch you'll need Jan.ai desktop application installed
 - A compatible language model downloaded in Jan.ai (e.g., Llama 3.2 3B Instruct)
 
