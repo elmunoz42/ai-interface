@@ -12,9 +12,10 @@ import {
   CircularProgress,
   Snackbar,
   Box,
-  Grid,
-  Chip,
+  // Grid,
+  // Chip,
 } from '@mui/material';
+import { apolloClient, CREATE_CHAT_COMPLETION } from '../lib/apollo-client';
 
 interface Message {
     text: string;
@@ -30,8 +31,8 @@ const ChatApp = () => {
   // Prompt recipes for quick access
   const promptRecipes = [
     {
-      label: "Explain Like I'm 5",
-      prompt: "Explain this in simple terms that a 5-year-old could understand: "
+      label: "Fix Grammar",
+      prompt: "Fix the grammar and spelling in the following text: "
     },
     {
       label: "Code Review",
@@ -76,45 +77,79 @@ const ChatApp = () => {
       // Clear input field immediately
       setInputText('');
 
-      // Prepare the request body for the Llama 3 endpoint
-      const requestBody = {
-        messages: updatedMessages.map(msg => ({
-          role: msg.role === 'ai' ? 'assistant' : msg.role,
-          content: msg.text
-        })),
-        max_tokens: 1000,
-        temperature: 0.7,
-        system_prompt: "You are a helpful assistant."
-      };
-  
-      // Make the API call to our proxy endpoint
-      const response = await fetch('/api/proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-      
-      if (!response.ok) {
-        throw new Error('API request failed');
+      // Try GraphQL first, fallback to REST API if it fails
+      try {
+        // Prepare the input for the GraphQL mutation
+        const input = {
+          messages: updatedMessages.map(msg => ({
+            role: msg.role === 'ai' ? 'assistant' : msg.role,
+            content: msg.text
+          })),
+          max_tokens: 1000,
+          temperature: 0.7,
+          system_prompt: "You are a helpful assistant."
+        };
+    
+        // Make the GraphQL mutation
+        const result = await apolloClient.mutate({
+          mutation: CREATE_CHAT_COMPLETION,
+          variables: { input },
+        });
+        
+        const data = result.data as any; // Type assertion for GraphQL response
+        console.log('GraphQL response data:', data);
+    
+        // Extract the assistant's response from the GraphQL response
+        const assistantMessage: Message = {
+          text: data.createChatCompletion.choices[0].message.content,
+          role: 'ai',
+        };
+        
+        // Add the assistant's response to the conversation
+        setMessages(prev => [...prev, assistantMessage]);
+        
+      } catch (graphqlError) {
+        console.warn('GraphQL failed, falling back to REST API:', graphqlError);
+        
+        // Fallback to REST API
+        const requestBody = {
+          messages: updatedMessages.map(msg => ({
+            role: msg.role === 'ai' ? 'assistant' : msg.role,
+            content: msg.text
+          })),
+          max_tokens: 1000,
+          temperature: 0.7,
+          system_prompt: "You are a helpful assistant."
+        };
+    
+        const response = await fetch('/api/proxy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+        
+        if (!response.ok) {
+          throw new Error('Both GraphQL and REST API failed');
+        }
+    
+        const data = await response.json();
+        console.log('REST API response data:', data);
+    
+        // Extract the assistant's response from the REST API response
+        const assistantMessage: Message = {
+          text: data.choices[0].message.content,
+          role: 'ai',
+        };
+        
+        // Add the assistant's response to the conversation
+        setMessages(prev => [...prev, assistantMessage]);
       }
-  
-      const data = await response.json();
-      console.log('response data:', data);
-  
-      // Extract the assistant's response from the OpenAI-compatible format
-      const assistantMessage: Message = {
-        text: data.choices[0].message.content,
-        role: 'ai',
-      };
-      
-      // Add the assistant's response to the conversation
-      setMessages(prev => [...prev, assistantMessage]);
       
     } catch (error) {
       setError('Error fetching data');
-      console.error('Error:', error);
+      console.error('Complete Error:', error);
     } finally {
       setLoading(false);
     }

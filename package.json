@@ -9,11 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@apollo/client": "^4.0.2",
+    "@apollo/server": "^5.0.0",
+    "@as-integrations/next": "^4.0.0",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@mui/material": "^5.15.15",
     "@types/cors": "^2.8.17",
     "cors": "^2.8.5",
+    "graphql": "^16.11.0",
+    "graphql-tag": "^2.12.6",
     "next": "14.2.3",
     "node-fetch": "^3.3.2",
     "react": "^18",
