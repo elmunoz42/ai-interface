@@ -124,7 +124,7 @@ const ChatApp = () => {
       
       <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, pl: 2.5, pr: 0 }}>
         {/* Main Chat Area */}
-        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2.5, pr: 1, minWidth: 0 }}>
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', py: 2.5, pr: 2, minWidth: 0 }}>
           {/* Messages Area */}
           <Paper 
             elevation={3} 
@@ -196,10 +196,10 @@ const ChatApp = () => {
             minWidth: 320,
             borderLeft: 1, 
             borderColor: 'divider',
-            pt: 1, // top padding
-            pb: 1, // bottom padding
-            pr: 1, // right padding restored
-            pl: 1, // left padding to avoid double spacing
+            pt: 2, // top padding
+            pb: 2, // bottom padding
+            pr: 2, // right padding restored
+            pl: 2, // left padding to avoid double spacing
             backgroundColor: '#fafafa',
             display: 'flex',
             flexDirection: 'column'
