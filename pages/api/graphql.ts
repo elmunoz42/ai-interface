@@ -92,6 +92,7 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  introspection: true, // Enable introspection for development
 });
 
 // Create the Next.js handler
