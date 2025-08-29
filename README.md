@@ -12,16 +12,21 @@ A modern, feature-rich Next.js chat interface for interacting with Large Languag
 - **Dark charcoal header** with professional styling
 
 ### 🧠 **AI Integration**
+- **Multi-provider support** (Cloudflare Workers AI + OpenAI)
 - **Dual API architecture** (GraphQL + REST fallback)
-- **Cloudflare Workers AI** backend with Llama 3 8B Instruct
+- **3 AI models available**:
+  - Llama 3 8B Instruct (Cloudflare - default)
+  - GPT-3.5 Turbo (OpenAI)
+  - GPT-4 (OpenAI)
 - **Customizable AI parameters** (temperature, max tokens)
 - **Smart error handling** with automatic fallback
 
 ### ⚙️ **Advanced Controls**
+- **Model selection dropdown** (Llama 3, GPT-3.5 Turbo, GPT-4)
 - **Temperature slider** (0.0 = focused, 1.0 = creative)
-- **Token limit control** (50-4000 tokens)
+- **Token limit control** (50-8192 tokens, varies by model)
 - **Real-time parameter adjustment**
-- **Model information display**
+- **Provider-specific information display**
 
 ### 🚀 **Prompt Engineering**
 - **5 built-in prompt recipes**:
@@ -87,8 +92,8 @@ pages/api/
 ### **API Layer**
 - **Primary**: GraphQL with Apollo Server v4
 - **Fallback**: REST API proxy
-- **Endpoint**: Cloudflare Workers AI
-- **Model**: Llama 3 8B Instruct
+- **Providers**: Cloudflare Workers AI + OpenAI
+- **Models**: Llama 3 8B, GPT-3.5 Turbo, GPT-4
 
 ## 🚀 **Quick Start**
 
@@ -118,13 +123,19 @@ Visit `http://localhost:3000` to use the chat interface.
 ```typescript
 {
   temperature: 0.7,        // Creativity level (0.0-1.0)
-  maxTokens: 300,         // Response length (50-4000)
-  systemPrompt: "You are a helpful assistant."
+  maxTokens: 300,         // Response length (50-8192, varies by model)
+  systemPrompt: "You are a helpful assistant.",
+  selectedModel: "Llama 3 8B Instruct" // Default model
 }
 ```
 
 ### **Environment Variables**
-The app uses Cloudflare Workers AI endpoints. No additional environment variables required for basic usage.
+```bash
+# Optional: Enable OpenAI models (GPT-3.5 Turbo, GPT-4)
+OPENAI_API_KEY=your_openai_api_key_here
+
+# If not set, only Cloudflare Workers AI (Llama 3) will be available
+```
 
 ## 📱 **Usage**
 
@@ -134,10 +145,16 @@ The app uses Cloudflare Workers AI endpoints. No additional environment variable
 3. View AI responses in the message list
 4. Use **Clear Chat** to start fresh
 
+### **AI Model Selection**
+- **Left Sidebar**: Choose between available AI models
+- **Cloudflare**: Llama 3 8B Instruct (free, fast)
+- **OpenAI**: GPT-3.5 Turbo, GPT-4 (requires API key)
+- **Auto-adjustment**: Token limits adjust based on selected model
+
 ### **AI Parameter Tuning**
 - **Left Sidebar**: Adjust temperature and token limits
 - **Temperature**: 0.0 for focused responses, 1.0 for creative
-- **Max Tokens**: Control response length (50-4000)
+- **Max Tokens**: Control response length (varies by model)
 
 ### **Prompt Recipes**
 - **Right Sidebar**: Quick-access prompt templates
@@ -223,6 +240,9 @@ npm run type-check
 - **@as-integrations/next** - Apollo-Next.js integration
 - **graphql** - GraphQL implementation
 
+### **AI/ML**
+- **openai** - OpenAI SDK for GPT models
+
 ## 🐛 **Troubleshooting**
 
 ### **Common Issues**
@@ -244,7 +264,13 @@ npm run type-check
 **API failures:**
 - Check if both GraphQL and REST APIs fail
 - Verify Cloudflare Workers AI endpoint availability
+- For OpenAI: Check OPENAI_API_KEY environment variable
 - Monitor console for detailed error logs
+
+**OpenAI models not available:**
+- Set OPENAI_API_KEY environment variable
+- Restart the development server
+- Check API key validity at https://platform.openai.com/api-keys
 
 ## 🤝 **Contributing**
 
@@ -268,6 +294,7 @@ MIT License - see LICENSE file for details.
 ## 🙏 **Acknowledgments**
 
 - **Cloudflare Workers AI** for LLM hosting
+- **OpenAI** for GPT models and API
 - **Meta** for Llama 3 model
 - **Material-UI** team for components
 - **Redux Toolkit** team for state management

@@ -1,13 +1,29 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, TextField, Slider } from '@mui/material';
+import { 
+  Box, 
+  Typography, 
+  TextField, 
+  Slider, 
+  FormControl, 
+  Select, 
+  MenuItem, 
+  SelectChangeEvent, 
+  Chip,
+  InputLabel
+} from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../lib/store/hooks';
-import { setTemperature, setMaxTokens } from '../../lib/store/aiParamsSlice';
+import { 
+  setTemperature, 
+  setMaxTokens, 
+  setSelectedModel,
+  type LLMModel 
+} from '../../lib/store/aiParamsSlice';
 
 const AIParametersSidebar = () => {
   const dispatch = useAppDispatch();
-  const { temperature, maxTokens } = useAppSelector(state => state.aiParams);
+  const { temperature, maxTokens, selectedModel, availableModels } = useAppSelector(state => state.aiParams);
 
   const handleTemperatureChange = (value: number) => {
     dispatch(setTemperature(value));
@@ -15,6 +31,30 @@ const AIParametersSidebar = () => {
 
   const handleMaxTokensChange = (value: number) => {
     dispatch(setMaxTokens(value));
+  };
+
+  const handleModelChange = (event: SelectChangeEvent<string>) => {
+    const modelId = event.target.value;
+    const model = availableModels.find(m => m.id === modelId);
+    if (model) {
+      dispatch(setSelectedModel(model));
+    }
+  };
+
+  const getProviderColor = (provider: string) => {
+    switch (provider) {
+      case 'openai': return '#10A37F';
+      case 'cloudflare': return '#F38020';
+      default: return '#666';
+    }
+  };
+
+  const getProviderLabel = (provider: string) => {
+    switch (provider) {
+      case 'openai': return 'OpenAI';
+      case 'cloudflare': return 'Cloudflare';
+      default: return provider;
+    }
   };
 
   return (
@@ -37,6 +77,82 @@ const AIParametersSidebar = () => {
         AI Parameters
       </Typography>
       
+      {/* Model Selection */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="subtitle2" gutterBottom>
+          Language Model
+        </Typography>
+        <FormControl fullWidth size="small" sx={{ mb: 1 }}>
+          <InputLabel>Select Model</InputLabel>
+          <Select
+            value={selectedModel.id}
+            onChange={handleModelChange}
+            label="Select Model"
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  maxWidth: 400, // Allow wider dropdown
+                  '& .MuiMenuItem-root': {
+                    whiteSpace: 'normal', // Allow text wrapping
+                    minHeight: 'auto', // Allow variable height
+                    padding: '12px 16px', // More padding for better spacing
+                  }
+                }
+              }
+            }}
+          >
+            {availableModels.map((model) => (
+              <MenuItem key={model.id} value={model.id}>
+                <Box sx={{ width: '100%' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                    <Typography variant="body2" fontWeight="medium">
+                      {model.name}
+                    </Typography>
+                    <Chip
+                      label={getProviderLabel(model.provider)}
+                      size="small"
+                      sx={{
+                        bgcolor: getProviderColor(model.provider),
+                        color: 'white',
+                        fontSize: '0.75rem',
+                        height: 20,
+                        flexShrink: 0 // Prevent chip from shrinking
+                      }}
+                    />
+                  </Box>
+                  <Typography 
+                    variant="caption" 
+                    color="text.secondary"
+                    sx={{ 
+                      display: 'block',
+                      whiteSpace: 'normal',
+                      wordWrap: 'break-word',
+                      lineHeight: 1.3
+                    }}
+                  >
+                    {model.description}
+                  </Typography>
+                </Box>
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Chip
+            label={getProviderLabel(selectedModel.provider)}
+            size="small"
+            sx={{
+              bgcolor: getProviderColor(selectedModel.provider),
+              color: 'white',
+              fontSize: '0.75rem'
+            }}
+          />
+          <Typography variant="caption" color="text.secondary">
+            Max: {selectedModel.maxTokens.toLocaleString()} tokens
+          </Typography>
+        </Box>
+      </Box>
+
       {/* Temperature Control */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
@@ -74,35 +190,21 @@ const AIParametersSidebar = () => {
           onChange={(e) => handleMaxTokensChange(parseInt(e.target.value) || 1000)}
           size="small"
           fullWidth
-          inputProps={{ min: 50, max: 4000, step: 50 }}
+          inputProps={{ min: 50, max: selectedModel.maxTokens, step: 50 }}
           sx={{ mb: 1 }}
         />
         <Slider
           value={maxTokens}
           onChange={(_, value) => handleMaxTokensChange(value as number)}
           min={50}
-          max={4000}
+          max={selectedModel.maxTokens}
           step={50}
           size="small"
         />
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography variant="caption">50</Typography>
-          <Typography variant="caption">4000</Typography>
+          <Typography variant="caption">{selectedModel.maxTokens.toLocaleString()}</Typography>
         </Box>
-      </Box>
-
-      {/* Model Info Section */}
-      <Box sx={{ mt: 'auto', pt: 2, borderTop: 1, borderColor: 'divider' }}>
-        <Typography variant="subtitle2" gutterBottom>
-          Model Information
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          Using: Llama 3 8B Instruct
-        </Typography>
-        <br />
-        <Typography variant="caption" color="text.secondary">
-          Provider: Cloudflare Workers AI
-        </Typography>
       </Box>
     </Box>
   );

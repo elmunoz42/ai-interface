@@ -8,7 +8,7 @@ import { setInputText, addUserMessage, sendMessage } from '../../lib/store/chatS
 const ChatInput = () => {
   const dispatch = useAppDispatch();
   const { messages, loading, inputText } = useAppSelector(state => state.chat);
-  const { temperature, maxTokens } = useAppSelector(state => state.aiParams);
+  const { temperature, maxTokens, systemPrompt, selectedModel } = useAppSelector(state => state.aiParams);
 
   const handleInputChange = (value: string) => {
     dispatch(setInputText(value));
@@ -18,19 +18,32 @@ const ChatInput = () => {
     if (!inputText.trim()) return; // Don't send empty messages
 
     console.log('🚀 Sending message:', inputText);
-    console.log('📊 Current state:', { messages: messages.length, temperature, maxTokens });
+    console.log('📊 Current state:', { 
+      messages: messages.length, 
+      temperature, 
+      maxTokens, 
+      selectedModel: selectedModel.name 
+    });
 
     // Add user message to Redux store
     dispatch(addUserMessage(inputText));
     
     // Send message to AI
     const allMessages = [...messages, { text: inputText, role: 'user', timestamp: Date.now() }];
-    console.log('📤 Dispatching sendMessage with:', { messagesCount: allMessages.length, temperature, maxTokens });
+    console.log('📤 Dispatching sendMessage with:', { 
+      messagesCount: allMessages.length, 
+      temperature, 
+      maxTokens,
+      systemPrompt,
+      model: selectedModel.name
+    });
     
     dispatch(sendMessage({ 
       messages: allMessages, 
       temperature, 
-      maxTokens 
+      maxTokens,
+      systemPrompt,
+      selectedModel
     }));
   };
 

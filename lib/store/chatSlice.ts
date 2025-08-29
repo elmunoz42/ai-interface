@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apolloClient, CREATE_CHAT_COMPLETION } from '../apollo-client';
+import type { LLMModel } from './aiParamsSlice';
 
 // Types
 export interface Message {
@@ -21,7 +22,9 @@ export const sendMessage = createAsyncThunk(
   async (payload: { 
     messages: Message[], 
     temperature: number, 
-    maxTokens: number 
+    maxTokens: number,
+    systemPrompt: string,
+    selectedModel: LLMModel
   }, { rejectWithValue }) => {
     console.log('🔄 sendMessage thunk started with payload:', payload);
     
@@ -34,7 +37,9 @@ export const sendMessage = createAsyncThunk(
         })),
         max_tokens: payload.maxTokens,
         temperature: payload.temperature,
-        system_prompt: "You are a helpful assistant."
+        system_prompt: payload.systemPrompt,
+        model: payload.selectedModel.id,
+        provider: payload.selectedModel.provider
       };
 
       console.log('📡 Prepared input:', input);
