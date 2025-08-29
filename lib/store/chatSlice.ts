@@ -23,6 +23,8 @@ export const sendMessage = createAsyncThunk(
     temperature: number, 
     maxTokens: number 
   }, { rejectWithValue }) => {
+    console.log('🔄 sendMessage thunk started with payload:', payload);
+    
     try {
       // Prepare the input for GraphQL
       const input = {
@@ -35,21 +37,29 @@ export const sendMessage = createAsyncThunk(
         system_prompt: "You are a helpful assistant."
       };
 
+      console.log('📡 Prepared input:', input);
+
       // Try GraphQL first
       try {
+        console.log('🔗 Trying GraphQL...');
         const result = await apolloClient.mutate({
           mutation: CREATE_CHAT_COMPLETION,
           variables: { input },
         });
 
         const data = result.data as any;
-        return {
+        console.log('✅ GraphQL success:', data);
+        
+        const response = {
           text: data.createChatCompletion.choices[0].message.content,
           role: 'ai',
           timestamp: Date.now()
         };
+        
+        console.log('📝 Returning response:', response);
+        return response;
       } catch (graphqlError) {
-        console.warn('GraphQL failed, falling back to REST API:', graphqlError);
+        console.warn('❌ GraphQL failed, falling back to REST API:', graphqlError);
         
         // Fallback to REST API
         const response = await fetch('/api/proxy', {
