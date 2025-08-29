@@ -12,6 +12,8 @@ import {
   CircularProgress,
   Snackbar,
   Box,
+  Slider,
+  Divider,
   // Grid,
   // Chip,
 } from '@mui/material';
@@ -27,6 +29,10 @@ const ChatApp = () => {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // AI Parameters
+  const [temperature, setTemperature] = useState(0.7);
+  const [maxTokens, setMaxTokens] = useState(300);
 
   // Prompt recipes for quick access
   const promptRecipes = [
@@ -85,8 +91,8 @@ const ChatApp = () => {
             role: msg.role === 'ai' ? 'assistant' : msg.role,
             content: msg.text
           })),
-          max_tokens: 1000,
-          temperature: 0.7,
+          max_tokens: maxTokens,
+          temperature: temperature,
           system_prompt: "You are a helpful assistant."
         };
     
@@ -117,8 +123,8 @@ const ChatApp = () => {
             role: msg.role === 'ai' ? 'assistant' : msg.role,
             content: msg.text
           })),
-          max_tokens: 1000,
-          temperature: 0.7,
+          max_tokens: maxTokens,
+          temperature: temperature,
           system_prompt: "You are a helpful assistant."
         };
     
@@ -163,9 +169,98 @@ const ChatApp = () => {
         </Toolbar>
       </AppBar>
       
-      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, pl: 2.5, pr: 0 }}>
+      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+        {/* Left Sidebar - AI Parameters */}
+        <Box 
+          sx={{ 
+            width: 280, 
+            minWidth: 280,
+            borderRight: 1, 
+            borderColor: 'divider',
+            pt: 2,
+            pb: 2,
+            pl: 2,
+            pr: 2,
+            backgroundColor: '#f8f9fa',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
+          <Typography variant="h6" sx={{ mb: 1.5, mt: 0 }}>
+            AI Parameters
+          </Typography>
+          
+          {/* Temperature Control */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Temperature: {temperature}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+              Controls randomness (0.0 = focused, 1.0 = creative)
+            </Typography>
+            <Slider
+              value={temperature}
+              onChange={(_, value) => setTemperature(value as number)}
+              min={0}
+              max={1}
+              step={0.1}
+              size="small"
+              sx={{ mb: 1 }}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="caption">Focused</Typography>
+              <Typography variant="caption">Creative</Typography>
+            </Box>
+          </Box>
+
+          {/* Max Tokens Control */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Max Tokens
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+              Maximum length of the AI response
+            </Typography>
+            <TextField
+              type="number"
+              value={maxTokens}
+              onChange={(e) => setMaxTokens(parseInt(e.target.value) || 1000)}
+              size="small"
+              fullWidth
+              inputProps={{ min: 50, max: 4000, step: 50 }}
+              sx={{ mb: 1 }}
+            />
+            <Slider
+              value={maxTokens}
+              onChange={(_, value) => setMaxTokens(value as number)}
+              min={50}
+              max={4000}
+              step={50}
+              size="small"
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="caption">50</Typography>
+              <Typography variant="caption">4000</Typography>
+            </Box>
+          </Box>
+
+          {/* Model Info Section */}
+          <Box sx={{ mt: 'auto', pt: 2, borderTop: 1, borderColor: 'divider' }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Model Information
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Using: Llama 3 8B Instruct
+            </Typography>
+            <br />
+            <Typography variant="caption" color="text.secondary">
+              Provider: Cloudflare Workers AI
+            </Typography>
+          </Box>
+        </Box>
+
         {/* Main Chat Area */}
-        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', py: 2.5, pr: 2, minWidth: 0 }}>
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', py: 2.5, px: 2, minWidth: 0 }}>
           {/* Messages Area */}
           <Paper 
             elevation={3} 
@@ -230,7 +325,7 @@ const ChatApp = () => {
           </Box>
         </Box>
         
-        {/* Sidebar */}
+        {/* Right Sidebar - Prompt Recipes */}
         <Box 
           sx={{ 
             width: 320, 
