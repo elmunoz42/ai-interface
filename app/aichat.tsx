@@ -11,6 +11,9 @@ import {
   Button,
   CircularProgress,
   Snackbar,
+  Box,
+  Grid,
+  Chip,
 } from '@mui/material';
 
 interface Message {
@@ -23,6 +26,34 @@ const ChatApp = () => {
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Prompt recipes for quick access
+  const promptRecipes = [
+    {
+      label: "Explain Like I'm 5",
+      prompt: "Explain this in simple terms that a 5-year-old could understand: "
+    },
+    {
+      label: "Code Review",
+      prompt: "Please review this code and suggest improvements: "
+    },
+    {
+      label: "Brainstorm Ideas",
+      prompt: "Help me brainstorm creative ideas for: "
+    },
+    {
+      label: "Summarize",
+      prompt: "Please provide a concise summary of: "
+    },
+    {
+      label: "Debug Help",
+      prompt: "I'm having trouble with this issue, can you help me debug: "
+    }
+  ];
+
+  const handlePromptRecipe = (recipe: { label: string; prompt: string }) => {
+    setInputText(recipe.prompt);
+  };
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return; // Don't send empty messages
@@ -84,51 +115,139 @@ const ChatApp = () => {
   };
 
   return (
-    <div>
-      <AppBar position="static">
+    <Box sx={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
+      <AppBar position="static" sx={{ flexShrink: 0 }}>
         <Toolbar>
           <Typography variant="h6">Llama Chat</Typography>
         </Toolbar>
       </AppBar>
-      <Paper elevation={3} style={{ height: '400px', overflowY: 'auto' }}>
-        <List>
-          {messages.map((msg, index) => (
-            <ListItem key={index} alignItems="flex-start">
-              <ListItemText
-                primary={msg.text}
-                secondary={msg.role === 'user' ? 'You' : msg.role === 'system' ? 'System' : 'ChatGPT'}
-              />
-            </ListItem>
-          ))}
-        </List>
-      </Paper>
-      <TextField
-        label="Type your message"
-        variant="outlined"
-        rows={5}
-        fullWidth
-        value={inputText}
-        onChange={(e) => setInputText(e.target.value)}
-        onKeyPress={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-          }
-        }}
-      />
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleSendMessage}
-        disabled={loading || !inputText.trim()}
-      >
-        Send
-      </Button>
-      {loading && <CircularProgress />}
+      
+      <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0, pl: 2.5, pr: 0 }}>
+        {/* Main Chat Area */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2.5, pr: 1, minWidth: 0 }}>
+          {/* Messages Area */}
+          <Paper 
+            elevation={3} 
+            sx={{ 
+              flex: 1, 
+              overflowY: 'auto', 
+              mb: 2.5,
+              minHeight: 0, // Important for flex scrolling
+              width: '100%',
+              // p: 1.5
+            }}
+          >
+            <List>
+              {messages.map((msg, index) => (
+                <ListItem key={index} alignItems="flex-start">
+                  <ListItemText
+                    primary={msg.text}
+                    secondary={msg.role === 'user' ? 'You' : msg.role === 'system' ? 'System' : 'AI Assistant'}
+                    sx={{
+                      '& .MuiListItemText-primary': {
+                        backgroundColor: msg.role === 'user' ? '#e3f2fd' : '#f5f5f5',
+                        padding: 1,
+                        borderRadius: 1,
+                        marginBottom: 0.5
+                      }
+                    }}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
+          
+          {/* Input Area */}
+          <Box sx={{ flexShrink: 0 }}>
+            <TextField
+              label="Type your message"
+              variant="outlined"
+              multiline
+              rows={2}
+              fullWidth
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              sx={{ mb: 1.5 }}
+            />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSendMessage}
+                disabled={loading || !inputText.trim()}
+              >
+                Send
+              </Button>
+              {loading && <CircularProgress size={24} />}
+            </Box>
+          </Box>
+        </Box>
+        
+        {/* Sidebar */}
+        <Box 
+          sx={{ 
+            width: 320, 
+            minWidth: 320,
+            borderLeft: 1, 
+            borderColor: 'divider',
+            pt: 1, // top padding
+            pb: 1, // bottom padding
+            pr: 1, // right padding restored
+            pl: 1, // left padding to avoid double spacing
+            backgroundColor: '#fafafa',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
+          <Typography variant="h6" sx={{ mb: 1.5, mt: 0 }}>
+            Prompt Recipes
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            Click a prompt to populate the text field, then add your specific details.
+          </Typography>
+          
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, flex: 1, overflowY: 'auto' }}>
+            {promptRecipes.map((recipe, index) => (
+              <Button
+                key={index}
+                variant="outlined"
+                size="small"
+                onClick={() => handlePromptRecipe(recipe)}
+                sx={{ 
+                  justifyContent: 'flex-start',
+                  textAlign: 'left',
+                  textTransform: 'none',
+                  py: 1.5,
+                  px: 2
+                }}
+              >
+                <Box>
+                  <Typography variant="subtitle2" component="div">
+                    {recipe.label}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {recipe.prompt.length > 40 
+                      ? `${recipe.prompt.substring(0, 40)}...` 
+                      : recipe.prompt
+                    }
+                  </Typography>
+                </Box>
+              </Button>
+            ))}
+          </Box>
+        </Box>
+      </Box>
+      
       {error && (
         <Snackbar open autoHideDuration={3000} message={error} />
       )}
-    </div>
+    </Box>
   );
 };
 
