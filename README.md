@@ -1,36 +1,145 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Llama Text Interface
 
-## Getting Started
+A Next.js application that provides a chat interface for interacting with local Large Language Models (LLMs) through Jan.ai.
 
-First, run the development server:
+## Usage Note
+- The main branch works with a llama 2 endpoint hosted at Cloudflare PLEASE DON'T OVERUSE THE TOKENS. Switch to the `local-jan-endpoint` branch
+  
+## Prerequisites
+
+- Node.js (v18 or later)
+
+- For the local branch you'll need Jan.ai desktop application installed
+- A compatible language model downloaded in Jan.ai (e.g., Llama 3.2 3B Instruct)
+
+## Setup
+
+1. Clone the repository and switch to local LLM branch
+
+```bash
+git clone <repository-url>
+cd <project-directory>
+git checkout -b local-jan-endpoint origin/local-jan-endpoint
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Start Jan.ai and ensure it's running on port 1337 (default port)
+
+4. Start the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The application will be available at `http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```
+├── pages/
+│   ├── api/
+│   │   └── proxy.tsx    # Backend proxy for Jan.ai API
+│   └── aichat.tsx       # Main chat interface component
+├── package.json
+└── README.md
+```
 
-## Learn More
+## Key Features
 
-To learn more about Next.js, take a look at the following resources:
+- Real-time chat interface
+- Integration with local LLMs through Jan.ai
+- Material-UI components for modern styling
+- Error handling and loading states
+- Support for multiline messages
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Technical Details
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### Frontend (aichat.tsx)
 
-## Deploy on Vercel
+- Built with React and Material-UI
+- Handles message state and UI interactions
+- Supports keyboard shortcuts (Enter to send)
+- Responsive design with message bubbles
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Backend (proxy.tsx)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- Proxies requests to Jan.ai API
+- Handles CORS and request transformation
+- Provides error handling and response formatting
+
+### API Integration
+
+- Endpoint: `http://localhost:1337/v1/chat/completions`
+- Model: "llama3.2-3b-instruct" (configurable)
+- Supports streaming responses (currently disabled for simplicity)
+
+## Configuration
+
+Default model parameters:
+
+```javascript
+{
+  max_tokens: 2048,
+  temperature: 0.7,
+  top_p: 0.95,
+  stream: false
+}
+```
+
+## Dependencies
+
+- Next.js
+- Material-UI
+- node-fetch
+- cors
+- next-connect
+
+## Error Handling
+
+The application includes comprehensive error handling for:
+
+- API connection failures
+- Invalid responses
+- Rate limiting
+- Network issues
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## Troubleshooting
+
+### Common Issues
+
+1. Connection refused errors:
+
+   - Ensure Jan.ai is running
+   - Check if the correct port (1337) is being used
+   - Verify no firewall is blocking the connection
+
+2. Model not found:
+
+   - Verify the model name in proxy.tsx matches your Jan.ai installation
+   - Ensure the model is downloaded in Jan.ai
+
+3. CORS errors:
+   - Check that the CORS middleware is properly configured
+   - Verify the frontend is making requests to the correct URL
+
+## License
+
+MIT
+
+## Acknowledgments
+
+- Jan.ai team for providing the local LLM infrastructure
+- Material-UI for the component library
