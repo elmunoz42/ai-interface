@@ -55,6 +55,12 @@ const ChatApp = () => {
     setInputText(recipe.prompt);
   };
 
+  const handleClearChat = () => {
+    setMessages([]);
+    setInputText('');
+    setError('');
+  };
+
   const handleSendMessage = async () => {
     if (!inputText.trim()) return; // Don't send empty messages
 
@@ -240,6 +246,23 @@ const ChatApp = () => {
                 </Box>
               </Button>
             ))}
+          </Box>
+          
+          {/* Clear Chat Button */}
+          <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+            <Button
+              variant="contained"
+              color="secondary"
+              size="small"
+              onClick={handleClearChat}
+              fullWidth
+              sx={{ 
+                textTransform: 'none',
+                py: 1
+              }}
+            >
+              Clear Chat
+            </Button>
           </Box>
         </Box>
       </Box>
