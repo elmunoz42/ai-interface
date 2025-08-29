@@ -1,6 +1,6 @@
 # AI Chat Interface
 
-A modern, feature-rich Next.js chat interface for interacting with Large Language Models (LLMs) using Cloudflare Workers AI and Llama 3 8B Instruct.
+A modern, feature-rich Next.js chat interface for interacting with Large Language Models (LLMs) using GraphQL, Redux, OpenAI API, and self-hosted Cloudflare Workers AI and Llama 3 8B Instruct.
 
 ## ✨ Features
 
