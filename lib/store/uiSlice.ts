@@ -5,6 +5,7 @@ export interface UIState {
   rightSidebarOpen: boolean;
   theme: 'light' | 'dark';
   selectedPromptRecipe: string | null;
+  streamingEnabled: boolean;
 }
 
 const initialState: UIState = {
@@ -12,6 +13,7 @@ const initialState: UIState = {
   rightSidebarOpen: true,
   theme: 'light',
   selectedPromptRecipe: null,
+  streamingEnabled: true,
 };
 
 const uiSlice = createSlice({
@@ -35,6 +37,9 @@ const uiSlice = createSlice({
     },
     setSelectedPromptRecipe: (state, action: PayloadAction<string | null>) => {
       state.selectedPromptRecipe = action.payload;
+    },
+    setStreamingEnabled: (state, action: PayloadAction<boolean>) => {
+      state.streamingEnabled = action.payload;
     }
   },
 });
@@ -45,6 +50,7 @@ export const {
   setLeftSidebarOpen, 
   setRightSidebarOpen, 
   setTheme, 
-  setSelectedPromptRecipe 
+  setSelectedPromptRecipe,
+  setStreamingEnabled
 } = uiSlice.actions;
 export default uiSlice.reducer;

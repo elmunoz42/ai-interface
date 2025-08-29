@@ -1,14 +1,16 @@
 'use client';
 
 import React from 'react';
-import { Box, TextField, Button, CircularProgress } from '@mui/material';
+import { Box, TextField, Button, CircularProgress, Switch, FormControlLabel } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '../../lib/store/hooks';
-import { setInputText, addUserMessage, sendMessage } from '../../lib/store/chatSlice';
+import { setInputText, addUserMessage, sendMessage, sendStreamingMessage } from '../../lib/store/chatSlice';
+import { setStreamingEnabled } from '../../lib/store/uiSlice';
 
 const ChatInput = () => {
   const dispatch = useAppDispatch();
-  const { messages, loading, inputText } = useAppSelector(state => state.chat);
+  const { messages, loading, inputText, streamingMessageId } = useAppSelector(state => state.chat);
   const { temperature, maxTokens, systemPrompt, selectedModel } = useAppSelector(state => state.aiParams);
+  const { streamingEnabled } = useAppSelector(state => state.ui);
 
   const handleInputChange = (value: string) => {
     dispatch(setInputText(value));
@@ -17,12 +19,13 @@ const ChatInput = () => {
   const handleSendMessage = async () => {
     if (!inputText.trim()) return; // Don't send empty messages
 
-    console.log('🚀 Sending message:', inputText);
+    console.log('🚀 Sending message:', inputText, streamingEnabled ? '(streaming)' : '(non-streaming)');
     console.log('📊 Current state:', { 
       messages: messages.length, 
       temperature, 
       maxTokens, 
-      selectedModel: selectedModel.name 
+      selectedModel: selectedModel.name,
+      streamingEnabled
     });
 
     // Add user message to Redux store
@@ -30,21 +33,22 @@ const ChatInput = () => {
     
     // Send message to AI
     const allMessages = [...messages, { text: inputText, role: 'user', timestamp: Date.now() }];
-    console.log('📤 Dispatching sendMessage with:', { 
-      messagesCount: allMessages.length, 
-      temperature, 
-      maxTokens,
-      systemPrompt,
-      model: selectedModel.name
-    });
     
-    dispatch(sendMessage({ 
+    const payload = { 
       messages: allMessages, 
       temperature, 
       maxTokens,
       systemPrompt,
       selectedModel
-    }));
+    };
+
+    if (streamingEnabled) {
+      console.log('🌊 Dispatching streaming message with payload:', payload);
+      dispatch(sendStreamingMessage(payload));
+    } else {
+      console.log('📤 Dispatching regular message with payload:', payload);
+      dispatch(sendMessage(payload));
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -53,6 +57,8 @@ const ChatInput = () => {
       handleSendMessage();
     }
   };
+
+  const isLoading = loading || streamingMessageId !== null;
 
   return (
     <Box sx={{ flexShrink: 0 }}>
@@ -66,17 +72,29 @@ const ChatInput = () => {
         onChange={(e) => handleInputChange(e.target.value)}
         onKeyPress={handleKeyPress}
         sx={{ mb: 1.5 }}
+        disabled={isLoading}
       />
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
         <Button
           variant="contained"
           color="primary"
           onClick={handleSendMessage}
-          disabled={loading || !inputText.trim()}
+          disabled={isLoading || !inputText.trim()}
         >
           Send
         </Button>
-        {loading && <CircularProgress size={24} />}
+        {isLoading && <CircularProgress size={24} />}
+        <FormControlLabel
+          control={
+            <Switch
+              checked={streamingEnabled}
+              onChange={(e) => dispatch(setStreamingEnabled(e.target.checked))}
+              size="small"
+            />
+          }
+          label="Streaming"
+          sx={{ ml: 'auto' }}
+        />
       </Box>
     </Box>
   );
