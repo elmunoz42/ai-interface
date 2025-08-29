@@ -6,7 +6,7 @@ console.log('proxy.tsx is being read');
 
 // Initializing the cors middleware
 const cors = Cors({
-  methods: ['GET', 'HEAD'],
+  methods: ['GET', 'POST', 'OPTIONS'],
 });
 
 // Create the router instance
@@ -33,14 +33,33 @@ const handler = router
     await runMiddleware(req, res, cors);
     next(); // Call next() to pass control to the next middleware
   })
-  .get(async (req, res) => { // Define the method (GET) for the route
-    // Extract the query parameters and convert them to a string
-    const query = new URLSearchParams(req.query as Record<string, string>).toString();
+  .post(async (req, res) => { // Changed to POST method for the Llama 3 endpoint
+    try {
+      // The request body should contain the chat completion parameters
+      const requestBody = req.body;
+      
+      // Make the request to the Llama 3 endpoint
+      const response = await fetch('https://llama3-api.fountain-city.workers.dev/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
 
-    // Include the query parameters in the request to the external API
-    const response = await fetch(`https://worker-sparkling-star-5ba6.elmunoz42.workers.dev/?${query}`);
-    const data = await response.json();
-    res.json(data);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Error in proxy:', error);
+      res.status(500).json({ 
+        error: 'Internal server error', 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
   });
 
 export default handler.handler(); // Export the handler from the router

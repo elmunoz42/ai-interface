@@ -25,61 +25,35 @@ const ChatApp = () => {
   const [error, setError] = useState('');
 
   const handleSendMessage = async () => {
-    if (!inputText.trim()) return; // Don't send empty messages
-
     try {
-      setLoading(true);
-      setError('');
+      setLoading(true); // Show loading spinner
+      setError(''); // Clear any previous errors
   
-      // Add user message to the conversation
-      const userMessage: Message = { text: inputText, role: 'user' };
-      const updatedMessages = [...messages, userMessage];
-      setMessages(updatedMessages);
-      
-      // Clear input field immediately
-      setInputText('');
-
-      // Prepare the request body for the Llama 3 endpoint
-      const requestBody = {
-        messages: updatedMessages.map(msg => ({
-          role: msg.role === 'ai' ? 'assistant' : msg.role,
-          content: msg.text
-        })),
-        max_tokens: 1000,
-        temperature: 0.7,
-        system_prompt: "You are a helpful assistant."
-      };
-  
-      // Make the API call to our proxy endpoint
-      const response = await fetch('/api/proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-      
+      // Make the API call with the user's input
+      const response = await fetch(`http://localhost:3000/api/proxy?query=${inputText}`);
       if (!response.ok) {
-        throw new Error('API request failed');
+        throw new Error('API request failed'); // Handle non-200 responses
       }
   
-      const data = await response.json();
+      const data = await response.json(); // Parse the response JSON
       console.log('response data:', data);
   
-      // Extract the assistant's response from the OpenAI-compatible format
-      const assistantMessage: Message = {
-        text: data.choices[0].message.content,
-        role: 'ai',
-      };
-      
-      // Add the assistant's response to the conversation
-      setMessages(prev => [...prev, assistantMessage]);
-      
+      // Update the state to include the new messages from the response
+    setMessages((prevMessages: { text: string, role: string }[]) => [
+        ...prevMessages,
+        ...data[0].inputs.messages.map((msg: any) => ({
+            text: msg.content,
+            role: msg.role,
+        })),
+        {
+            text: data[0].response.response,
+            role: 'ai',
+        },
+    ]);
     } catch (error) {
-      setError('Error fetching data');
-      console.error('Error:', error);
+      setError('Error fetching data'); // Handle API call errors
     } finally {
-      setLoading(false);
+      setLoading(false); // Hide loading spinner
     }
   };
 
@@ -109,18 +83,12 @@ const ChatApp = () => {
         fullWidth
         value={inputText}
         onChange={(e) => setInputText(e.target.value)}
-        onKeyPress={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleSendMessage();
-          }
-        }}
       />
       <Button
         variant="contained"
         color="primary"
         onClick={handleSendMessage}
-        disabled={loading || !inputText.trim()}
+        disabled={loading}
       >
         Send
       </Button>
