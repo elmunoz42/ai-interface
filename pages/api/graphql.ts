@@ -128,22 +128,35 @@ const resolvers = {
   Mutation: {
     createChatCompletion: async (_: any, { input }: { input: any }) => {
       try {
-        console.log('🔄 GraphQL resolver called with input:', input);
+        console.log('🔄 GraphQL resolver called with input:', {
+          provider: input.provider,
+          model: input.model,
+          messages: input.messages?.length,
+          temperature: input.temperature,
+          max_tokens: input.max_tokens
+        });
         
         let data;
         
         if (input.provider === 'openai') {
-          console.log('🤖 Using OpenAI provider');
+          console.log('🤖 Using OpenAI provider for model:', input.model);
           data = await callOpenAI(input);
         } else {
-          console.log('☁️ Using Cloudflare provider');
+          console.log('☁️ Using Cloudflare provider for model:', input.model);
+          console.log('☁️ Cloudflare input being sent:', {
+            messages: input.messages,
+            max_tokens: input.max_tokens,
+            temperature: input.temperature,
+            system_prompt: input.system_prompt,
+          });
           data = await callCloudflareAI(input);
         }
 
-        console.log('✅ API response received:', data);
+        console.log('✅ API response received successfully from:', input.provider);
         return data;
       } catch (error) {
         console.error('❌ Error in GraphQL resolver:', error);
+        console.error('❌ Input that caused error:', input);
         throw new Error(`Failed to create chat completion: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     },

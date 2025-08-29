@@ -42,7 +42,14 @@ export const sendMessage = createAsyncThunk(
         provider: payload.selectedModel.provider
       };
 
-      console.log('📡 Prepared input:', input);
+      console.log('📡 Prepared input for GraphQL:', {
+        ...input,
+        selectedModelInfo: {
+          id: payload.selectedModel.id,
+          name: payload.selectedModel.name,
+          provider: payload.selectedModel.provider
+        }
+      });
 
       // Try GraphQL first
       try {
