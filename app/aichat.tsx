@@ -163,7 +163,7 @@ const ChatApp = () => {
 
   return (
     <Box sx={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
-      <AppBar position="static" sx={{ flexShrink: 0 }}>
+      <AppBar position="static" sx={{ flexShrink: 0, backgroundColor: '#2c2c2c' }}>
         <Toolbar>
           <Typography variant="h6">Llama Chat</Typography>
         </Toolbar>
@@ -263,7 +263,7 @@ const ChatApp = () => {
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', py: 2.5, px: 2, minWidth: 0 }}>
           {/* Messages Area */}
           <Paper 
-            elevation={3} 
+            elevation={1} 
             sx={{ 
               flex: 1, 
               overflowY: 'auto', 
