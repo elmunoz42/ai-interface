@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useEffect } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -17,22 +19,62 @@ import {
   // Grid,
   // Chip,
 } from '@mui/material';
-import { apolloClient, CREATE_CHAT_COMPLETION } from '../lib/apollo-client';
-
-interface Message {
-    text: string;
-    role: string;
-  }
+import { useAppDispatch, useAppSelector } from '../lib/store/hooks';
+import { 
+  setInputText, 
+  addUserMessage, 
+  clearMessages, 
+  clearError, 
+  sendMessage 
+} from '../lib/store/chatSlice';
+import { 
+  setTemperature, 
+  setMaxTokens 
+} from '../lib/store/aiParamsSlice';
+import { 
+  setSelectedPromptRecipe 
+} from '../lib/store/uiSlice';
 
 const ChatApp = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputText, setInputText] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const dispatch = useAppDispatch();
   
-  // AI Parameters
-  const [temperature, setTemperature] = useState(0.7);
-  const [maxTokens, setMaxTokens] = useState(300);
+  // Get state from Redux store
+  const { messages, loading, error, inputText } = useAppSelector(state => state.chat);
+  const { temperature, maxTokens } = useAppSelector(state => state.aiParams);
+  const { selectedPromptRecipe } = useAppSelector(state => state.ui);
+
+  // Redux state monitoring for development
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 Redux State Update:', {
+        chat: {
+          messagesCount: messages.length,
+          loading,
+          error,
+          inputTextLength: inputText.length,
+          inputPreview: inputText.substring(0, 30) + (inputText.length > 30 ? '...' : '')
+        },
+        aiParams: { temperature, maxTokens },
+        ui: { selectedPromptRecipe }
+      });
+    }
+  }, [messages, loading, error, inputText, temperature, maxTokens, selectedPromptRecipe]);
+
+  // State validation
+  useEffect(() => {
+    const validations = [
+      { check: temperature >= 0 && temperature <= 1, message: 'Temperature out of range' },
+      { check: maxTokens >= 50 && maxTokens <= 4000, message: 'MaxTokens out of range' },
+      { check: Array.isArray(messages), message: 'Messages should be array' },
+      { check: typeof inputText === 'string', message: 'InputText should be string' },
+    ];
+
+    validations.forEach(({ check, message }) => {
+      if (!check) {
+        console.error('❌ State Validation Failed:', message);
+      }
+    });
+  }, [temperature, maxTokens, messages, inputText]);
 
   // Prompt recipes for quick access
   const promptRecipes = [
@@ -59,106 +101,43 @@ const ChatApp = () => {
   ];
 
   const handlePromptRecipe = (recipe: { label: string; prompt: string }) => {
-    setInputText(recipe.prompt);
+    dispatch(setInputText(recipe.prompt));
+    dispatch(setSelectedPromptRecipe(recipe.label));
   };
 
   const handleClearChat = () => {
-    setMessages([]);
-    setInputText('');
-    setError('');
+    dispatch(clearMessages());
   };
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return; // Don't send empty messages
 
-    try {
-      setLoading(true);
-      setError('');
-  
-      // Add user message to the conversation
-      const userMessage: Message = { text: inputText, role: 'user' };
-      const updatedMessages = [...messages, userMessage];
-      setMessages(updatedMessages);
-      
-      // Clear input field immediately
-      setInputText('');
+    // Add user message to Redux store
+    dispatch(addUserMessage(inputText));
+    
+    // Send message to AI
+    const allMessages = [...messages, { text: inputText, role: 'user', timestamp: Date.now() }];
+    dispatch(sendMessage({ 
+      messages: allMessages, 
+      temperature, 
+      maxTokens 
+    }));
+  };
 
-      // Try GraphQL first, fallback to REST API if it fails
-      try {
-        // Prepare the input for the GraphQL mutation
-        const input = {
-          messages: updatedMessages.map(msg => ({
-            role: msg.role === 'ai' ? 'assistant' : msg.role,
-            content: msg.text
-          })),
-          max_tokens: maxTokens,
-          temperature: temperature,
-          system_prompt: "You are a helpful assistant."
-        };
-    
-        // Make the GraphQL mutation
-        const result = await apolloClient.mutate({
-          mutation: CREATE_CHAT_COMPLETION,
-          variables: { input },
-        });
-        
-        const data = result.data as any; // Type assertion for GraphQL response
-        console.log('GraphQL response data:', data);
-    
-        // Extract the assistant's response from the GraphQL response
-        const assistantMessage: Message = {
-          text: data.createChatCompletion.choices[0].message.content,
-          role: 'ai',
-        };
-        
-        // Add the assistant's response to the conversation
-        setMessages(prev => [...prev, assistantMessage]);
-        
-      } catch (graphqlError) {
-        console.warn('GraphQL failed, falling back to REST API:', graphqlError);
-        
-        // Fallback to REST API
-        const requestBody = {
-          messages: updatedMessages.map(msg => ({
-            role: msg.role === 'ai' ? 'assistant' : msg.role,
-            content: msg.text
-          })),
-          max_tokens: maxTokens,
-          temperature: temperature,
-          system_prompt: "You are a helpful assistant."
-        };
-    
-        const response = await fetch('/api/proxy', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-        });
-        
-        if (!response.ok) {
-          throw new Error('Both GraphQL and REST API failed');
-        }
-    
-        const data = await response.json();
-        console.log('REST API response data:', data);
-    
-        // Extract the assistant's response from the REST API response
-        const assistantMessage: Message = {
-          text: data.choices[0].message.content,
-          role: 'ai',
-        };
-        
-        // Add the assistant's response to the conversation
-        setMessages(prev => [...prev, assistantMessage]);
-      }
-      
-    } catch (error) {
-      setError('Error fetching data');
-      console.error('Complete Error:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleTemperatureChange = (value: number) => {
+    dispatch(setTemperature(value));
+  };
+
+  const handleMaxTokensChange = (value: number) => {
+    dispatch(setMaxTokens(value));
+  };
+
+  const handleInputChange = (value: string) => {
+    dispatch(setInputText(value));
+  };
+
+  const handleErrorClose = () => {
+    dispatch(clearError());
   };
 
   return (
@@ -200,7 +179,7 @@ const ChatApp = () => {
             </Typography>
             <Slider
               value={temperature}
-              onChange={(_, value) => setTemperature(value as number)}
+              onChange={(_, value) => handleTemperatureChange(value as number)}
               min={0}
               max={1}
               step={0.1}
@@ -224,7 +203,7 @@ const ChatApp = () => {
             <TextField
               type="number"
               value={maxTokens}
-              onChange={(e) => setMaxTokens(parseInt(e.target.value) || 1000)}
+              onChange={(e) => handleMaxTokensChange(parseInt(e.target.value) || 1000)}
               size="small"
               fullWidth
               inputProps={{ min: 50, max: 4000, step: 50 }}
@@ -232,7 +211,7 @@ const ChatApp = () => {
             />
             <Slider
               value={maxTokens}
-              onChange={(_, value) => setMaxTokens(value as number)}
+              onChange={(_, value) => handleMaxTokensChange(value as number)}
               min={50}
               max={4000}
               step={50}
@@ -302,7 +281,7 @@ const ChatApp = () => {
               rows={2}
               fullWidth
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={(e) => handleInputChange(e.target.value)}
               onKeyPress={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -398,7 +377,12 @@ const ChatApp = () => {
       </Box>
       
       {error && (
-        <Snackbar open autoHideDuration={3000} message={error} />
+        <Snackbar 
+          open={!!error} 
+          autoHideDuration={3000} 
+          message={error} 
+          onClose={handleErrorClose}
+        />
       )}
     </Box>
   );
