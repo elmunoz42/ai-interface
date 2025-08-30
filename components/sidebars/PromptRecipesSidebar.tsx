@@ -10,7 +10,11 @@ import {
   Card, 
   CardContent,
   Tooltip,
-  Divider
+  Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import { 
   Edit as EditIcon, 
@@ -42,6 +46,8 @@ const PromptRecipesSidebar = () => {
     prompt: ''
   });
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingRecipe, setEditingRecipe] = useState<PromptRecipe | null>(null);
 
   const handlePromptRecipe = (recipe: PromptRecipe) => {
     dispatch(setInputText(recipe.prompt));
@@ -52,24 +58,24 @@ const PromptRecipesSidebar = () => {
     dispatch(clearMessages());
   };
 
-  const handleStartEdit = (recipeId: string) => {
-    dispatch(startEditingRecipe(recipeId));
+  const handleStartEdit = (recipe: PromptRecipe) => {
+    setEditingRecipe({ ...recipe });
+    setEditDialogOpen(true);
   };
 
   const handleStopEdit = () => {
-    dispatch(stopEditingRecipe());
+    setEditDialogOpen(false);
+    setEditingRecipe(null);
   };
 
-  const handleUpdateTitle = (id: string, title: string) => {
-    dispatch(updateRecipeTitle({ id, title }));
-  };
-
-  const handleUpdateDescription = (id: string, description: string) => {
-    dispatch(updateRecipeDescription({ id, description }));
-  };
-
-  const handleUpdatePrompt = (id: string, prompt: string) => {
-    dispatch(updateRecipePrompt({ id, prompt }));
+  const handleSaveEdit = () => {
+    if (editingRecipe) {
+      dispatch(updateRecipeTitle({ id: editingRecipe.id, title: editingRecipe.title }));
+      dispatch(updateRecipeDescription({ id: editingRecipe.id, description: editingRecipe.description }));
+      dispatch(updateRecipePrompt({ id: editingRecipe.id, prompt: editingRecipe.prompt }));
+    }
+    setEditDialogOpen(false);
+    setEditingRecipe(null);
   };
 
   const handleDeleteRecipe = (id: string) => {
@@ -89,122 +95,59 @@ const PromptRecipesSidebar = () => {
   };
 
   const renderRecipeCard = (recipe: PromptRecipe) => {
-    const isEditing = recipe.isEditing;
-
     return (
       <Card 
         key={recipe.id}
         variant="outlined" 
         sx={{ 
           mb: 1,
-          cursor: isEditing ? 'default' : 'pointer',
-          '&:hover': isEditing ? {} : {
+          cursor: 'pointer',
+          '&:hover': {
             boxShadow: 2,
             backgroundColor: '#f5f5f5'
           }
         }}
-        onClick={isEditing ? undefined : () => handlePromptRecipe(recipe)}
+        onClick={() => handlePromptRecipe(recipe)}
       >
         <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-            {isEditing ? (
-              <TextField
-                size="small"
-                value={recipe.title}
-                onChange={(e) => handleUpdateTitle(recipe.id, e.target.value)}
-                placeholder="Recipe title"
-                sx={{ flexGrow: 1, mr: 1 }}
-                autoFocus
-              />
-            ) : (
-              <Typography variant="subtitle2" component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
-                {recipe.title}
-              </Typography>
-            )}
+          {/* Header Section */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'flex-start', 
+            mb: 1 
+          }}>
+            <Typography variant="subtitle2" component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
+              {recipe.title}
+            </Typography>
             
-            <Box sx={{ display: 'flex', gap: 0.5 }}>
-              {isEditing ? (
-                <>
-                  <Tooltip title="Save changes">
-                    <IconButton size="small" onClick={handleStopEdit} color="primary">
-                      <CheckIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </>
-              ) : (
-                <>
-                  <Tooltip title="Edit recipe">
-                    <IconButton 
-                      size="small" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleStartEdit(recipe.id);
-                      }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete recipe">
-                    <IconButton 
-                      size="small" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteRecipe(recipe.id);
-                      }}
-                      color="error"
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </>
-              )}
+            {/* Action Buttons */}
+            <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+              <Tooltip title="Edit recipe">
+                <IconButton 
+                  size="small" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleStartEdit(recipe);
+                  }}
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Delete recipe">
+                <IconButton 
+                  size="small" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteRecipe(recipe.id);
+                  }}
+                  color="error"
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
             </Box>
           </Box>
-
-          {isEditing ? (
-            <>
-              <TextField
-                size="small"
-                value={recipe.description}
-                onChange={(e) => handleUpdateDescription(recipe.id, e.target.value)}
-                placeholder="Recipe description"
-                fullWidth
-                sx={{ mb: 1 }}
-                multiline
-                rows={2}
-              />
-              <TextField
-                size="small"
-                value={recipe.prompt}
-                onChange={(e) => handleUpdatePrompt(recipe.id, e.target.value)}
-                placeholder="Prompt text"
-                fullWidth
-                multiline
-                rows={3}
-              />
-            </>
-          ) : (
-            <>
-              {recipe.description && (
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: '0.875rem' }}>
-                  {recipe.description}
-                </Typography>
-              )}
-              <Typography variant="caption" color="text.secondary" sx={{ 
-                display: 'block',
-                fontStyle: 'italic',
-                backgroundColor: '#f8f9fa',
-                p: 1,
-                borderRadius: 1,
-                border: '1px solid #e0e0e0'
-              }}>
-                {recipe.prompt.length > 60 
-                  ? `${recipe.prompt.substring(0, 60)}...` 
-                  : recipe.prompt
-                }
-              </Typography>
-            </>
-          )}
         </CardContent>
       </Card>
     );
@@ -323,6 +266,122 @@ const PromptRecipesSidebar = () => {
           Clear Chat
         </Button>
       </Box>
+
+      {/* Edit Recipe Dialog */}
+      <Dialog 
+        open={editDialogOpen} 
+        onClose={handleStopEdit}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { minHeight: '60vh' }
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Typography variant="h6" component="div">
+            Edit Recipe
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Customize your prompt recipe title, description, and template
+          </Typography>
+        </DialogTitle>
+        
+        <DialogContent sx={{ pb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 1 }}>
+            {/* Title Field */}
+            <Box>
+              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                Recipe Title *
+              </Typography>
+              <TextField
+                value={editingRecipe?.title || ''}
+                onChange={(e) => setEditingRecipe(prev => prev ? { ...prev, title: e.target.value } : null)}
+                placeholder="Enter a descriptive title for your recipe"
+                fullWidth
+                autoFocus
+                variant="outlined"
+              />
+            </Box>
+
+            {/* Description Field */}
+            <Box>
+              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                Description
+              </Typography>
+              <TextField
+                value={editingRecipe?.description || ''}
+                onChange={(e) => setEditingRecipe(prev => prev ? { ...prev, description: e.target.value } : null)}
+                placeholder="Brief description of what this recipe does and when to use it"
+                fullWidth
+                multiline
+                rows={3}
+                variant="outlined"
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                Optional: Help others understand the purpose of this prompt recipe
+              </Typography>
+            </Box>
+
+            {/* Prompt Template Field */}
+            <Box>
+              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                Prompt Template *
+              </Typography>
+              <TextField
+                value={editingRecipe?.prompt || ''}
+                onChange={(e) => setEditingRecipe(prev => prev ? { ...prev, prompt: e.target.value } : null)}
+                placeholder="Enter your prompt template here..."
+                fullWidth
+                multiline
+                rows={6}
+                variant="outlined"
+              />
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                Tip: End your prompt with a colon or space so users can easily add their specific content
+              </Typography>
+            </Box>
+
+            {/* Preview Section */}
+            <Box sx={{ 
+              backgroundColor: '#f8f9fa', 
+              p: 2, 
+              borderRadius: 1, 
+              border: '1px solid #e0e0e0' 
+            }}>
+              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                Preview
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                {editingRecipe?.title || 'Recipe Title'}
+              </Typography>
+              {editingRecipe?.description && (
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: '0.875rem' }}>
+                  {editingRecipe.description}
+                </Typography>
+              )}
+              <Typography variant="caption" color="text.secondary" sx={{ 
+                fontStyle: 'italic',
+                display: 'block'
+              }}>
+                "{editingRecipe?.prompt || 'Your prompt template will appear here...'}"
+              </Typography>
+            </Box>
+          </Box>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={handleStopEdit}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSaveEdit} 
+            variant="contained"
+            disabled={!editingRecipe?.title?.trim() || !editingRecipe?.prompt?.trim()}
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
