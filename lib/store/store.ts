@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import chatReducer from './chatSlice';
 import aiParamsReducer from './aiParamsSlice';
 import uiReducer from './uiSlice';
+import promptRecipesReducer from './promptRecipesSlice';
 
 // Custom logging middleware for development
 const loggerMiddleware = (storeAPI: any) => (next: any) => (action: any) => {
@@ -22,6 +23,7 @@ export const store = configureStore({
     chat: chatReducer,
     aiParams: aiParamsReducer,
     ui: uiReducer,
+    promptRecipes: promptRecipesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
