@@ -9,6 +9,9 @@ Add a Django backend with LangChain and FAISS to provide RAG (Retrieval-Augmente
 - ✅ Multi-provider support (Cloudflare Workers AI + OpenAI)
 - ✅ Streaming responses implementation
 - ✅ Material-UI components with responsive design
+- ✅ Editable prompt recipes with popup editing
+- ✅ Custom prompt recipe creation and management
+- 🔄 **Ready for User Management Implementation**
 
 ## 🎯 **Target Architecture**
 
@@ -17,14 +20,423 @@ Frontend (Next.js)           Backend (Django)           External Services
 ┌─────────────────┐         ┌─────────────────┐        ┌─────────────────┐
 │ React Components│         │ Django REST API │        │ OpenAI API      │
 │ Redux Store     │◄────────┤ LangChain       │        │ Cloudflare AI   │
-│ Apollo Client   │         │ FAISS Vector DB│        │ Document Storage│
-│ Material-UI     │         │ Document Loader │        │                 │
+│ User Management │         │ FAISS Vector DB│        │ OAuth Providers │
+│ Apollo Client   │         │ Document Loader │        │ Document Storage│
+│ Material-UI     │         │ User Auth System│        │ Email Service   │
 └─────────────────┘         └─────────────────┘        └─────────────────┘
+
+User Data Flow:
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│ User A      │    │ User B      │    │ Guest User  │
+│ - Chats     │    │ - Chats     │    │ - Temp Data │
+│ - Recipes   │    │ - Recipes   │    │ - No Persist│
+│ - Settings  │    │ - Settings  │    │ - Basic UI  │
+└─────────────┘    └─────────────┘    └─────────────┘
 ```
+
+## 🚀 **User Management Implementation Approach**
+
+### **Frontend-First Implementation**
+Given the current Next.js setup, we'll implement user management in the frontend first with localStorage persistence, then enhance with backend authentication when Django is added.
+
+**Phase 0A: Local User Management** (2-3 days)
+- Implement user switching with localStorage
+- Add user creation and profile management
+- Isolate chat history and settings by user
+- Basic UI components for user management
+
+**Phase 0B: Enhanced User Experience** (2-3 days)
+- Add user avatars and themes
+- Implement user-specific prompt recipes
+- Add data export/import functionality
+- Enhanced settings and preferences
+
+**Phase 0C: Preparation for Backend** (1-2 days)
+- Design API interfaces for future backend
+- Add authentication UI components
+- Prepare data migration strategies
+- Security considerations and token management
 
 ---
 
 ## 🗓️ **Implementation Phases**
+
+### **Phase 0: User Management System** (Week 0-1)
+
+#### **0.1 User Authentication & Authorization**
+- [ ] **Authentication Methods**
+  - **Primary**: Django built-in authentication (email/username + password)
+  - **Session-based authentication** with Django sessions for web interface
+  - **Token-based authentication** for API calls (Django REST Framework tokens)
+  - Password reset functionality via email
+  - **Optional OAuth** (Google, GitHub) - can be added later if needed
+
+- [ ] **User Profile Management**
+  - Django User model extension with custom profile fields
+  - Profile creation and editing via Django REST API
+  - Avatar upload and management
+  - User preferences stored in Django database
+  - Account deletion and data export
+
+#### **0.2 Frontend User Management Components**
+
+**Redux State Structure:**
+```typescript
+interface UserState {
+  currentUser: User | null;
+  isAuthenticated: boolean;
+  loading: boolean;
+  error: string | null;
+  users: User[];
+  selectedUserId: string | null;
+}
+
+interface User {
+  id: string;
+  email: string;
+  username: string;
+  displayName: string;
+  avatar?: string;
+  preferences: UserPreferences;
+  createdAt: string;
+  lastActiveAt: string;
+}
+
+interface UserPreferences {
+  theme: 'light' | 'dark' | 'system';
+  defaultModel: string;
+  aiParameters: AIParameters;
+  customPromptRecipes: PromptRecipe[];
+}
+```
+
+**UI Components to Create:**
+- [ ] **UserCreationForm**: Simple username/display name creation (no password initially)
+- [ ] **LoginForm**: Email/password login (when Django backend ready)
+- [ ] **UserProfile**: Profile editing and preferences
+- [ ] **UserSwitcher**: Dropdown in header to switch between users
+- [ ] **UserAvatar**: Display user avatar and status
+- [ ] **UserSettingsPanel**: Comprehensive settings management
+
+#### **0.3 Per-User Data Isolation**
+
+**Chat History Separation:**
+- [ ] **User-specific Chat Sessions**
+  - Isolate chat messages by user ID
+  - User-specific conversation history
+  - Private chat sessions
+  - Export/import chat history
+
+**Custom Prompt Recipes:**
+- [ ] **User-owned Recipes**
+  - Personal prompt recipe collections
+  - Recipe sharing between users (optional)
+  - Recipe categorization and tagging
+  - Import/export recipe sets
+
+**AI Parameter Profiles:**
+- [ ] **User Preferences**
+  - Per-user default AI parameters
+  - Model preferences and API keys
+  - Custom system prompts
+  - Usage analytics and quotas
+
+#### **0.4 User Interface Enhancements**
+
+**Header Bar Updates:**
+```typescript
+// Enhanced header with user management
+interface HeaderProps {
+  currentUser: User | null;
+  users: User[];
+  onUserSwitch: (userId: string) => void;
+  onLogout: () => void;
+  onUserSettings: () => void;
+}
+```
+
+**Sidebar Modifications:**
+- [ ] **User-Aware Sidebars**
+  - Display user-specific prompt recipes
+  - Show user's AI parameter presets
+  - User-specific recent conversations
+  - Personal document collections (for RAG)
+
+#### **0.5 Data Migration Strategy**
+
+**Existing Data Handling:**
+- [ ] **Current Data Preservation**
+  - Migrate existing chat history to default user
+  - Convert current prompt recipes to default user's collection
+  - Preserve AI parameter settings as default profile
+  - Maintain existing API configurations
+
+**Multi-User Data Structure:**
+```typescript
+// Before: Global data
+interface AppState {
+  chat: ChatState;
+  aiParams: AIParamsState;
+  promptRecipes: PromptRecipesState;
+}
+
+// After: User-scoped data
+interface AppState {
+  user: UserState;
+  users: { [userId: string]: UserDataState };
+  global: GlobalAppState;
+}
+
+interface UserDataState {
+  chat: ChatState;
+  aiParams: AIParamsState;
+  promptRecipes: PromptRecipesState;
+  documents: DocumentState; // For future RAG
+}
+```
+
+#### **0.6 Authentication Flow Implementation**
+
+**Frontend-First Implementation (Before Django):**
+
+**Phase 0A: Simple User Management** (2-3 days)
+```typescript
+// Simple localStorage-based user management (no authentication)
+interface LocalUser {
+  id: string;
+  username: string;
+  displayName: string;
+  avatar?: string;
+  createdAt: string;
+}
+
+// No passwords required initially - just user switching
+export const createUser = createAsyncThunk(
+  'user/create',
+  async (userData: { username: string; displayName: string }) => {
+    const newUser: LocalUser = {
+      id: uuidv4(),
+      username: userData.username,
+      displayName: userData.displayName,
+      createdAt: new Date().toISOString()
+    };
+    // Store in localStorage
+    const existingUsers = JSON.parse(localStorage.getItem('users') || '[]');
+    existingUsers.push(newUser);
+    localStorage.setItem('users', JSON.stringify(existingUsers));
+    return newUser;
+  }
+);
+```
+
+**Phase 0B: Django Authentication Integration** (When Django backend ready)
+```typescript
+// Replace localStorage with Django REST API calls
+export const loginUser = createAsyncThunk(
+  'user/login',
+  async (credentials: { email: string; password: string }) => {
+    const response = await fetch('/api/auth/login/', {
+      method: 'POST',
+      credentials: 'include', // Include Django session cookies
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials)
+    });
+    if (!response.ok) throw new Error('Login failed');
+    return await response.json();
+  }
+);
+
+export const registerUser = createAsyncThunk(
+  'user/register',
+  async (userData: { email: string; password: string; displayName: string }) => {
+    const response = await fetch('/api/auth/register/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+    if (!response.ok) throw new Error('Registration failed');
+    return await response.json();
+  }
+);
+```
+
+**Django Backend Authentication Setup:**
+```python
+# Django Models (when backend is ready)
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+
+class CustomUser(AbstractUser):
+    email = models.EmailField(unique=True)
+    display_name = models.CharField(max_length=100)
+    avatar = models.ImageField(upload_to='avatars/', blank=True)
+    preferences = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+# Django REST API Endpoints
+POST /api/auth/register/      # User registration
+POST /api/auth/login/         # User login (creates session)
+POST /api/auth/logout/        # User logout
+GET  /api/auth/user/          # Get current authenticated user
+PUT  /api/auth/user/          # Update user profile
+POST /api/auth/password-reset/ # Password reset via email
+```
+
+**Django Settings Configuration:**
+```python
+# settings.py
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# Use Django sessions for web interface
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',  # For API calls
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+# Session settings
+SESSION_COOKIE_AGE = 1209600  # 2 weeks
+SESSION_SAVE_EVERY_REQUEST = True
+```
+
+#### **0.7 User Switching Functionality**
+
+**Quick User Switching:**
+- [ ] **User Dropdown in Header**
+  - List of recent/saved users
+  - Quick switch without re-authentication
+  - Add new user option
+  - Guest mode for temporary usage
+
+**User Session Management:**
+- [ ] **Session Persistence**
+  - Remember last active user
+  - Auto-save user state before switching
+  - Restore user state on switch
+  - Handle concurrent user sessions
+
+#### **0.8 User Settings and Preferences**
+
+**Settings Panel Sections:**
+```typescript
+interface UserSettings {
+  // Profile Settings
+  profile: {
+    displayName: string;
+    email: string;
+    avatar: string;
+    bio: string;
+  };
+  
+  // App Preferences
+  preferences: {
+    theme: 'light' | 'dark' | 'system';
+    language: string;
+    timezone: string;
+    notifications: NotificationSettings;
+  };
+  
+  // AI Defaults
+  aiDefaults: {
+    preferredModel: string;
+    defaultTemperature: number;
+    defaultMaxTokens: number;
+    systemPrompt: string;
+  };
+  
+  // Privacy Settings
+  privacy: {
+    shareData: boolean;
+    analyticsOptIn: boolean;
+    chatHistoryRetention: number; // days
+  };
+}
+```
+
+#### **0.9 Testing Strategy for User Management**
+
+**Unit Tests:**
+- [ ] User authentication actions
+- [ ] User data isolation
+- [ ] User switching functionality
+- [ ] Settings persistence
+
+**Integration Tests:**
+- [ ] Login/logout flow
+- [ ] User data migration
+- [ ] Multi-user chat isolation
+- [ ] Settings synchronization
+
+**E2E Tests:**
+- [ ] Complete user registration flow
+- [ ] User switching scenarios
+- [ ] Data persistence across sessions
+- [ ] Settings changes reflection
+
+#### **0.10 Security Considerations**
+
+**Frontend-Only Phase Security:**
+- [ ] **Basic Data Protection**
+  - User data isolation in localStorage
+  - Input validation and sanitization
+  - Basic XSS protection
+  - No sensitive data storage
+
+**Django Backend Security:**
+- [ ] **Authentication Security**
+  - Django's built-in password hashing (PBKDF2)
+  - Session-based authentication with CSRF protection
+  - Rate limiting on auth endpoints
+  - Secure password reset flow
+  - Email verification for new accounts
+
+**Data Protection:**
+- [ ] **User Data Isolation**
+  - Database-level user data separation
+  - API endpoint authentication requirements
+  - User-specific data access controls
+  - Chat history and settings isolation
+
+**Why Django Auth is Better for This Project:**
+
+✅ **Advantages of Django Built-in Authentication:**
+- **Simpler Setup**: No external service dependencies or API keys
+- **Full Control**: Complete ownership of user data and auth flow
+- **Cost Effective**: No additional service costs or rate limits
+- **Privacy Focused**: User data stays on your servers
+- **Faster Development**: Django auth is battle-tested and well-documented
+- **Better for MVP**: Start simple, add complexity later if needed
+- **Seamless Integration**: Works perfectly with Django REST Framework
+
+❌ **OAuth Complexity We're Avoiding:**
+- External service dependencies (Google, GitHub API availability)
+- Complex redirect flows and state management
+- Multiple API key configurations and management
+- User experience friction (extra redirect steps)
+- Third-party data privacy considerations
+- Overkill for personal/small team projects
+
+**Future OAuth Option:**
+If OAuth is needed later, it can be easily added using `django-allauth`:
+```python
+# Future addition if needed
+INSTALLED_APPS = [
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+]
+```
+
+But Django's built-in authentication will handle all your current needs perfectly!
+
+---
 
 ### **Phase 1: Django Backend Setup** (Week 1)
 
@@ -437,6 +849,63 @@ services:
 
 ---
 
+## 🎯 **Immediate Next Steps: User Management Implementation**
+
+### **Priority 1: Core User System** (This Week)
+1. **Create User Redux Slice** (Day 1)
+   - Design user state structure
+   - Implement user CRUD actions
+   - Add user switching logic
+   - localStorage persistence
+
+2. **User Interface Components** (Day 2)
+   - UserSwitcher dropdown in header
+   - User creation modal
+   - Basic profile management
+   - User avatar display
+
+3. **Data Isolation Implementation** (Day 3)
+   - Migrate existing chat/recipe data to user-scoped
+   - Implement per-user data loading
+   - Add user-specific data persistence
+   - Test data isolation
+
+### **Priority 2: Enhanced User Experience** (Next Week)
+1. **Advanced User Settings**
+   - Comprehensive settings panel
+   - Theme and preference management
+   - AI parameter profiles
+   - Data export/import
+
+2. **User Management Polish**
+   - User avatars and customization
+   - User deletion and data cleanup
+   - Guest mode implementation
+   - Enhanced user switching UX
+
+### **Key Implementation Files to Create:**
+```
+lib/store/
+├── userSlice.ts              # User management Redux slice
+├── userDataSlice.ts          # User-scoped data management
+└── persistenceMiddleware.ts  # localStorage integration
+
+components/user/
+├── UserSwitcher.tsx          # Header user dropdown (Phase 0A)
+├── UserCreationForm.tsx      # Simple user creation (no password)
+├── LoginForm.tsx             # Email/password login (Phase 0B - Django)
+├── UserProfile.tsx           # Profile management
+├── UserSettings.tsx          # Settings panel
+└── UserAvatar.tsx           # Avatar display
+
+utils/
+├── userDataMigration.ts      # Migrate existing data
+├── userStorage.ts           # localStorage utilities
+└── userValidation.ts        # User data validation
+```
+
+---
+
 ## 🚀 **Future Enhancements**
 
 ### **Advanced Features**
@@ -453,6 +922,8 @@ services:
 
 ---
 
-*Last Updated: August 29, 2025*
+*Last Updated: August 30, 2025*
+*Next Focus: Multi-User System Implementation*
+*Estimated Timeline: 1 week for basic user management, 2 weeks for full implementation*
 *Estimated Timeline: 6 weeks for full implementation*
 *Team Size: 2-3 developers recommended*
