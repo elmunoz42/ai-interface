@@ -1,7 +1,7 @@
 # AI Chat Interface - Backend Integration Roadmap
 
 ## 🎯 **Project Vision**
-Add a Django backend with LangChain and FAISS to provide RAG (Retrieval-Augmented Generation) capabilities as a 4th model option alongside Llama 3, GPT-3.5 Turbo, and GPT-4.
+Add a Django backend with LangChain and FAISS to provide RAG (Retrieval-Augmented Generation) capabilities as a 4th model option alongside Llama 3, GPT-3.5 Turbo, and GPT-4. User management system will be implemented after core RAG functionality is complete.
 
 ## 📋 **Current State**
 - ✅ Next.js frontend with Redux state management
@@ -11,7 +11,8 @@ Add a Django backend with LangChain and FAISS to provide RAG (Retrieval-Augmente
 - ✅ Material-UI components with responsive design
 - ✅ Editable prompt recipes with popup editing
 - ✅ Custom prompt recipe creation and management
-- 🔄 **Ready for User Management Implementation**
+- 🔄 **Ready for RAG Implementation** (Priority 1)
+- 📋 **User Management Planned** (Priority 2)
 
 ## 🎯 **Target Architecture**
 
@@ -34,34 +35,55 @@ User Data Flow:
 └─────────────┘    └─────────────┘    └─────────────┘
 ```
 
-## 🚀 **User Management Implementation Approach**
+## 🚀 **FAISS RAG Implementation Approach**
 
-### **Frontend-First Implementation**
-Given the current Next.js setup, we'll implement user management in the frontend first with localStorage persistence, then enhance with backend authentication when Django is added.
+### **Priority Order (Revised)**
+Given the focus on RAG functionality, we'll implement in this order:
 
-**Phase 0A: Local User Management** (2-3 days)
-- Implement user switching with localStorage
-- Add user creation and profile management
-- Isolate chat history and settings by user
-- Basic UI components for user management
+**Phase 1: Core RAG System** (Weeks 1-3)
+- Django backend with FAISS vector store
+- Document upload and processing
+- RAG chain implementation
+- Basic frontend integration
 
-**Phase 0B: Enhanced User Experience** (2-3 days)
-- Add user avatars and themes
-- Implement user-specific prompt recipes
-- Add data export/import functionality
-- Enhanced settings and preferences
+**Phase 2: Enhanced RAG Features** (Week 4)
+- Advanced retrieval strategies
+- Document collections
+- RAG analytics and optimization
 
-**Phase 0C: Preparation for Backend** (1-2 days)
-- Design API interfaces for future backend
-- Add authentication UI components
-- Prepare data migration strategies
-- Security considerations and token management
+**Phase 3: User Management** (Week 5)
+- Simple frontend user switching
+- User-specific document collections
+- Per-user chat history
+
+**Phase 4: Production Polish** (Week 6)
+- Performance optimization
+- Deployment configuration
+- Security enhancements
 
 ---
 
 ## 🗓️ **Implementation Phases**
 
-### **Phase 0: User Management System** (Week 0-1)
+### **Phase 1: Django Backend & FAISS Setup** (Week 1)
+
+#### **1.1 Project Structure**
+```
+ai-chat/
+├── frontend/              # Existing Next.js app
+│   ├── app/
+│   ├── components/
+│   ├── lib/
+│   └── pages/
+└── backend/               # New Django project
+    ├── ai_chat_backend/   # Django project
+    ├── rag_service/       # RAG app
+    ├── chat_api/          # Chat endpoints
+    ├── document_store/    # Document management
+    └── requirements.txt
+```
+
+#### **1.2 Django Dependencies**
 
 #### **0.1 User Authentication & Authorization**
 - [ ] **Authentication Methods**
@@ -473,6 +495,16 @@ ai-chat/
 
 ### **Phase 2: FAISS Vector Store Implementation** (Week 2)
 
+#### **1.3 Initial Setup Tasks**
+- [ ] Create Django project structure
+- [ ] Configure CORS for Next.js integration
+- [ ] Setup environment variables
+- [ ] Create basic REST API endpoints
+- [ ] Add health check endpoint
+- [ ] Configure logging and error handling
+
+### **Phase 2: FAISS Vector Store Implementation** (Week 2)
+
 #### **2.1 Document Management System**
 - [ ] **Document Upload API**
   - File upload endpoint (`/api/documents/upload/`)
@@ -849,59 +881,89 @@ services:
 
 ---
 
-## 🎯 **Immediate Next Steps: User Management Implementation**
+## 🎯 **Immediate Next Steps: RAG Implementation**
 
-### **Priority 1: Core User System** (This Week)
-1. **Create User Redux Slice** (Day 1)
-   - Design user state structure
-   - Implement user CRUD actions
-   - Add user switching logic
-   - localStorage persistence
+### **Priority 1: Django Backend Setup** (This Week)
+1. **Create Django Project** (Day 1)
+   - Set up Django project structure
+   - Configure CORS for Next.js integration
+   - Install core dependencies (Django, DRF, LangChain, FAISS)
+   - Create basic health check endpoint
 
-2. **User Interface Components** (Day 2)
-   - UserSwitcher dropdown in header
-   - User creation modal
-   - Basic profile management
-   - User avatar display
+2. **Document Management System** (Day 2-3)
+   - Create document upload API endpoint
+   - Implement file processing pipeline (PDF, DOCX, TXT)
+   - Set up document storage and metadata handling
+   - Add document validation and error handling
 
-3. **Data Isolation Implementation** (Day 3)
-   - Migrate existing chat/recipe data to user-scoped
-   - Implement per-user data loading
-   - Add user-specific data persistence
-   - Test data isolation
+3. **FAISS Vector Store** (Day 4-5)
+   - Implement embedding generation with sentence-transformers
+   - Set up FAISS index creation and management
+   - Create similarity search functionality
+   - Add vector store persistence
 
-### **Priority 2: Enhanced User Experience** (Next Week)
-1. **Advanced User Settings**
-   - Comprehensive settings panel
-   - Theme and preference management
-   - AI parameter profiles
-   - Data export/import
+### **Priority 2: RAG Chain Implementation** (Next Week)
+1. **LangChain Integration**
+   - Create RAG chain with retrieval and generation
+   - Implement context injection strategies
+   - Add response formatting and quality checks
+   - Test with different document types
 
-2. **User Management Polish**
-   - User avatars and customization
-   - User deletion and data cleanup
-   - Guest mode implementation
-   - Enhanced user switching UX
+2. **Frontend Integration**
+   - Add RAG model to Redux state
+   - Create document upload UI component
+   - Update AI parameters sidebar for RAG settings
+   - Test end-to-end RAG functionality
+
+### **Priority 3: User Management** (Week 5)
+*After RAG core functionality is complete*
+1. **Simple User System**
+   - Frontend user switching with localStorage
+   - User-specific document collections
+   - Per-user chat history isolation
 
 ### **Key Implementation Files to Create:**
 ```
-lib/store/
-├── userSlice.ts              # User management Redux slice
-├── userDataSlice.ts          # User-scoped data management
-└── persistenceMiddleware.ts  # localStorage integration
+backend/
+├── ai_chat_backend/
+│   ├── settings.py           # Django configuration
+│   ├── urls.py              # URL routing
+│   └── wsgi.py              # WSGI application
+├── rag_service/
+│   ├── models.py            # Document and vector store models
+│   ├── views.py             # RAG API endpoints
+│   ├── serializers.py       # API serialization
+│   ├── vector_store.py      # FAISS integration
+│   └── rag_chain.py         # LangChain RAG implementation
+└── requirements.txt         # Python dependencies
 
-components/user/
-├── UserSwitcher.tsx          # Header user dropdown (Phase 0A)
-├── UserCreationForm.tsx      # Simple user creation (no password)
-├── LoginForm.tsx             # Email/password login (Phase 0B - Django)
-├── UserProfile.tsx           # Profile management
-├── UserSettings.tsx          # Settings panel
-└── UserAvatar.tsx           # Avatar display
+frontend/components/rag/
+├── DocumentUpload.tsx       # File upload interface
+├── RAGSettings.tsx          # RAG-specific parameters
+├── DocumentList.tsx         # Manage uploaded documents
+└── VectorStoreStats.tsx     # Vector store information
+```
 
-utils/
-├── userDataMigration.ts      # Migrate existing data
-├── userStorage.ts           # localStorage utilities
-└── userValidation.ts        # User data validation
+---
+
+## 📅 **User Management Implementation** (Phase 3)
+
+*This section will be implemented after RAG functionality is complete*
+
+### **Simple User System Approach**
+- **Frontend-First**: localStorage-based user switching
+- **Django Integration**: Add authentication when backend is established
+- **Data Isolation**: User-specific document collections and chat history
+- **No Auth Initially**: Focus on core functionality first
+
+### **User Management Components (Future)**
+```typescript
+// Will be implemented in Phase 3
+interface UserState {
+  currentUser: User | null;
+  users: User[];
+  // ... user management state
+}
 ```
 
 ---
@@ -923,7 +985,7 @@ utils/
 ---
 
 *Last Updated: August 30, 2025*
-*Next Focus: Multi-User System Implementation*
-*Estimated Timeline: 1 week for basic user management, 2 weeks for full implementation*
+*Next Focus: RAG Implementation (Priority 1), User Management (Priority 3)*
+*Estimated Timeline: 3 weeks for RAG system, 1 week for user management*
 *Estimated Timeline: 6 weeks for full implementation*
 *Team Size: 2-3 developers recommended*
