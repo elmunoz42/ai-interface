@@ -9,7 +9,14 @@ import { setStreamingEnabled } from '../../lib/store/uiSlice';
 const ChatInput = () => {
   const dispatch = useAppDispatch();
   const { messages, loading, inputText, streamingMessageId } = useAppSelector(state => state.chat);
-  const { temperature, maxTokens, systemPrompt, selectedModel } = useAppSelector(state => state.aiParams);
+  const { 
+    temperature, 
+    maxTokens, 
+    systemPrompt, 
+    selectedModel,
+    ragNumContextDocs,
+    ragSimilarityThreshold
+  } = useAppSelector(state => state.aiParams);
   const { streamingEnabled } = useAppSelector(state => state.ui);
 
   const handleInputChange = (value: string) => {
@@ -39,7 +46,9 @@ const ChatInput = () => {
       temperature, 
       maxTokens,
       systemPrompt,
-      selectedModel
+      selectedModel,
+      ragNumContextDocs,
+      ragSimilarityThreshold
     };
 
     if (streamingEnabled) {

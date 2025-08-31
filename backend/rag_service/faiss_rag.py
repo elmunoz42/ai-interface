@@ -15,7 +15,7 @@ from langchain.schema import Document
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_community.vectorstores import FAISS as LangChainFAISS
 from langchain_community.embeddings import SentenceTransformerEmbeddings
-from langchain_community.llms import OpenAI
+from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 
@@ -75,7 +75,11 @@ class FAISSVectorStore:
     def _initialize_vector_store(self):
         """Initialize or load existing FAISS index"""
         try:
-            if os.path.exists(self.index_path):
+            # Check if both index.faiss and index.pkl files exist
+            index_faiss_path = os.path.join(self.index_path, "index.faiss")
+            index_pkl_path = os.path.join(self.index_path, "index.pkl")
+            
+            if os.path.exists(index_faiss_path) and os.path.exists(index_pkl_path):
                 logger.info(f"Loading existing FAISS index from {self.index_path}")
                 # Enable dangerous deserialization in controlled environment
                 self.vector_store = LangChainFAISS.load_local(
@@ -84,9 +88,9 @@ class FAISSVectorStore:
                     allow_dangerous_deserialization=True  # Safe in controlled environment
                 )
             else:
-                logger.info("Creating new FAISS index")
+                logger.info("Creating new FAISS index - no existing index found")
                 # Create empty vector store with sample document
-                sample_doc = Document(page_content="Sample document for initialization")
+                sample_doc = Document(page_content="Sample document for initialization", metadata={"source": "initialization"})
                 self.vector_store = LangChainFAISS.from_documents(
                     [sample_doc], 
                     self.embedding_model
@@ -94,7 +98,18 @@ class FAISSVectorStore:
                 self.save_index()
         except Exception as e:
             logger.error(f"Error initializing vector store: {str(e)}")
-            raise
+            # If loading fails, create a new one
+            try:
+                logger.info("Creating new FAISS index due to loading error")
+                sample_doc = Document(page_content="Sample document for initialization", metadata={"source": "initialization"})
+                self.vector_store = LangChainFAISS.from_documents(
+                    [sample_doc], 
+                    self.embedding_model
+                )
+                self.save_index()
+            except Exception as creation_error:
+                logger.error(f"Error creating new vector store: {str(creation_error)}")
+                raise
     
     def add_documents(self, file_paths: List[str]) -> Dict[str, Any]:
         """Add documents to the vector store"""
@@ -183,8 +198,9 @@ class RAGChain:
     def _initialize_llm(self):
         """Initialize the language model"""
         if self.llm_provider == "openai":
-            self.llm = OpenAI(
-                openai_api_key=os.getenv('OPENAI_API_KEY'),
+            self.llm = ChatOpenAI(
+                api_key=os.getenv('OPENAI_API_KEY'),
+                model="gpt-3.5-turbo",
                 temperature=0.7,
                 max_tokens=512
             )
