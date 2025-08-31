@@ -12,6 +12,7 @@ from .serializers import (
     DocumentSerializer, DocumentUploadSerializer, 
     RAGSearchSerializer, RAGChatSerializer
 )
+from .vector_store import get_vector_store_service
 
 logger = logging.getLogger(__name__)
 
@@ -39,30 +40,34 @@ def upload_document(request):
             f"documents/{uploaded_file.name}",
             uploaded_file
         )
+        full_path = os.path.join(settings.MEDIA_ROOT, file_path)
         
-        # Create document record
-        document = Document.objects.create(
-            filename=uploaded_file.name,
-            file_path=file_path,
-            file_size=uploaded_file.size,
-            content_type=uploaded_file.content_type,
-            status='uploading'
-        )
+        # Process with vector store
+        vector_store = get_vector_store_service()
+        result = vector_store.add_document(full_path)
         
-        # TODO: Process document asynchronously
-        # For now, just mark as completed
-        document.status = 'completed'
-        document.save()
+        # Clean up temporary file
+        try:
+            if os.path.exists(full_path):
+                os.remove(full_path)
+        except Exception as e:
+            logger.warning(f"Could not remove temporary file {full_path}: {str(e)}")
         
-        return Response(
-            DocumentSerializer(document).data,
-            status=status.HTTP_201_CREATED
-        )
+        if result['status'] == 'completed':
+            return Response({
+                'message': 'Document processed successfully',
+                'result': result
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response({
+                'error': 'Document processing failed',
+                'details': result
+            }, status=status.HTTP_400_BAD_REQUEST)
         
     except Exception as e:
         logger.error(f"Error uploading document: {str(e)}")
         return Response(
-            {'error': 'Failed to upload document'},
+            {'error': 'Failed to upload document', 'details': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -72,24 +77,34 @@ def rag_status(request):
     """Get RAG service status"""
     
     try:
+        # Get database statistics
         total_documents = Document.objects.count()
         processed_documents = Document.objects.filter(status='completed').count()
         total_chunks = DocumentChunk.objects.count()
         vector_stores = VectorStore.objects.count()
         
+        # Get vector store statistics
+        try:
+            vector_store = get_vector_store_service()
+            vector_stats = vector_store.get_stats()
+        except Exception as e:
+            vector_stats = {'error': str(e)}
+        
         return Response({
             'status': 'operational',
-            'statistics': {
+            'database_statistics': {
                 'total_documents': total_documents,
                 'processed_documents': processed_documents,
                 'total_chunks': total_chunks,
                 'vector_stores': vector_stores
             },
+            'vector_store_statistics': vector_stats,
             'features': {
                 'document_upload': True,
                 'text_extraction': True,
                 'vector_search': True,
-                'rag_chat': True
+                'rag_chat': True,
+                'supported_formats': ['.pdf', '.txt', '.md', '.docx']
             }
         })
         
@@ -113,18 +128,20 @@ def search_documents(request):
         query = serializer.validated_data['query']
         num_results = serializer.validated_data['num_results']
         
-        # TODO: Implement actual vector search
-        # For now, return placeholder response
+        # Perform vector search
+        vector_store = get_vector_store_service()
+        results = vector_store.similarity_search(query, k=num_results)
+        
         return Response({
             'query': query,
-            'results': [],
-            'message': 'Vector search not yet implemented'
+            'results': results,
+            'total_results': len(results)
         })
         
     except Exception as e:
         logger.error(f"Error searching documents: {str(e)}")
         return Response(
-            {'error': 'Search failed'},
+            {'error': 'Search failed', 'details': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -142,19 +159,42 @@ def rag_chat(request):
         conversation_id = serializer.validated_data.get('conversation_id')
         num_context_docs = serializer.validated_data['num_context_docs']
         
-        # TODO: Implement actual RAG chat
-        # For now, return placeholder response
+        # Get relevant documents
+        vector_store = get_vector_store_service()
+        context_docs = vector_store.similarity_search(message, k=num_context_docs)
+        
+        # For now, return the context documents
+        # TODO: Integrate with LLM for actual RAG response
         return Response({
             'message': message,
-            'response': 'RAG chat not yet implemented. Please upload documents first.',
+            'response': f'Found {len(context_docs)} relevant document chunks. RAG chat with LLM integration coming soon!',
             'conversation_id': conversation_id or 'new_conversation',
-            'context_documents': []
+            'context_documents': context_docs
         })
         
     except Exception as e:
         logger.error(f"Error in RAG chat: {str(e)}")
         return Response(
-            {'error': 'Chat failed'},
+            {'error': 'Chat failed', 'details': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def clear_vector_store(request):
+    """Clear the vector store (for development/testing)"""
+    try:
+        vector_store = get_vector_store_service()
+        vector_store.clear_index()
+        
+        return Response({
+            'message': 'Vector store cleared successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error clearing vector store: {str(e)}")
+        return Response(
+            {'error': str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 import os

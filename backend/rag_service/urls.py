@@ -15,4 +15,5 @@ urlpatterns = [
     path('status/', views.rag_status, name='rag_status'),
     path('search/', views.search_documents, name='search_documents'),
     path('chat/', views.rag_chat, name='rag_chat'),
+    path('clear/', views.clear_vector_store, name='clear_vector_store'),
 ]
