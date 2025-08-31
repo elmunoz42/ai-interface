@@ -20,9 +20,7 @@ import {
   setSelectedModel,
   setRagNumContextDocs,
   setRagSimilarityThreshold,
-  setModel,
-  type LLMModel,
-  type AIModel
+  type LLMModel
 } from '../../lib/store/aiParamsSlice';
 
 const AIParametersSidebar = () => {
@@ -33,8 +31,7 @@ const AIParametersSidebar = () => {
     selectedModel, 
     availableModels,
     ragNumContextDocs,
-    ragSimilarityThreshold,
-    model
+    ragSimilarityThreshold
   } = useAppSelector(state => state.aiParams);
 
   const handleTemperatureChange = (value: number) => {
@@ -61,14 +58,11 @@ const AIParametersSidebar = () => {
     dispatch(setRagSimilarityThreshold(value));
   };
 
-  const handleAIModelChange = (event: SelectChangeEvent<AIModel>) => {
-    dispatch(setModel(event.target.value as AIModel));
-  };
-
   const getProviderColor = (provider: string) => {
     switch (provider) {
       case 'openai': return '#10A37F';
       case 'cloudflare': return '#F38020';
+      case 'faiss': return '#4A90E2';
       default: return '#666';
     }
   };
@@ -77,6 +71,7 @@ const AIParametersSidebar = () => {
     switch (provider) {
       case 'openai': return 'OpenAI';
       case 'cloudflare': return 'Cloudflare';
+      case 'faiss': return 'FAISS';
       default: return provider;
     }
   };
@@ -101,32 +96,11 @@ const AIParametersSidebar = () => {
         AI Parameters
       </Typography>
       
-      {/* AI Model Type Selection */}
+      {/* Model Selection - Always visible */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          AI Model Type
+          Model Selection
         </Typography>
-        <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-          <InputLabel>Select AI Model</InputLabel>
-          <Select
-            value={model}
-            onChange={handleAIModelChange}
-            label="Select AI Model"
-          >
-            <MenuItem value="openai">OpenAI Models</MenuItem>
-            <MenuItem value="anthropic">Anthropic Models</MenuItem>
-            <MenuItem value="cloudflare">Cloudflare Models</MenuItem>
-            <MenuItem value="rag">RAG with FAISS</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
-      
-      {/* Model Selection */}
-      {model !== 'rag' && (
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            Language Model
-          </Typography>
         <FormControl fullWidth size="small" sx={{ mb: 1 }}>
           <InputLabel>Select Model</InputLabel>
           <Select
@@ -193,14 +167,16 @@ const AIParametersSidebar = () => {
             }}
           />
           <Typography variant="caption" color="text.secondary">
-            Max: {selectedModel.maxTokens.toLocaleString()} tokens
+            {selectedModel.id !== 'rag-faiss' 
+              ? `Max: ${selectedModel.maxTokens.toLocaleString()} tokens`
+              : 'Document-based AI with vector search'
+            }
           </Typography>
         </Box>
       </Box>
-      )}
 
-      {/* Temperature Control and Max Tokens - Only for LLM models */}
-      {model !== 'rag' && (
+      {/* LLM-specific parameters - Temperature Control and Max Tokens */}
+      {selectedModel.id !== 'rag-faiss' && (
         <>
           {/* Temperature Control */}
           <Box sx={{ mb: 3 }}>
@@ -259,7 +235,7 @@ const AIParametersSidebar = () => {
       )}
 
       {/* RAG Parameters */}
-      {model === 'rag' && (
+      {selectedModel.id === 'rag-faiss' && (
         <>
           {/* Number of Context Documents */}
           <Box sx={{ mb: 3 }}>
