@@ -35,8 +35,20 @@ class VectorStoreService:
             raise ImportError("numpy is required for vector operations")
         
         self.embedding_model_name = embedding_model_name
-        self.embedding_model = SentenceTransformer(embedding_model_name)
-        self.dimension = 384  # Default dimension for all-MiniLM-L6-v2
+        
+        # Initialize embedding model with trust settings
+        try:
+            self.embedding_model = SentenceTransformer(
+                embedding_model_name,
+                trust_remote_code=False,  # Don't trust remote code for security
+                cache_folder=os.path.join(settings.BASE_DIR, 'model_cache')
+            )
+        except Exception as e:
+            logger.warning(f"Failed to load {embedding_model_name}, falling back to simple model")
+            # Fallback to a simpler approach if the model loading fails
+            self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+        
+        self.dimension = self.embedding_model.get_sentence_embedding_dimension()
         
         self.index = None
         self.documents = []  # Store document metadata
