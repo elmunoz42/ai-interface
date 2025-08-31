@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Typography, 
@@ -12,7 +12,8 @@ import {
   SelectChangeEvent, 
   Chip,
   InputLabel,
-  Button
+  Button,
+  Alert
 } from '@mui/material';
 import { CloudUpload } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../lib/store/hooks';
@@ -35,6 +36,9 @@ const AIParametersSidebar = () => {
     ragNumContextDocs,
     ragSimilarityThreshold
   } = useAppSelector(state => state.aiParams);
+
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
+  const [uploadMessage, setUploadMessage] = useState<string>('');
 
   const handleTemperatureChange = (value: number) => {
     dispatch(setTemperature(value));
@@ -64,6 +68,9 @@ const AIParametersSidebar = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    setUploadStatus('uploading');
+    setUploadMessage('Uploading document...');
+
     const formData = new FormData();
     formData.append('file', file);
 
@@ -75,16 +82,37 @@ const AIParametersSidebar = () => {
 
       if (response.ok) {
         const result = await response.json();
+        setUploadStatus('success');
+        setUploadMessage(`Successfully uploaded "${file.name}" to knowledge base!`);
         console.log('File uploaded successfully:', result);
-        // You could add a success message here
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          setUploadStatus('idle');
+          setUploadMessage('');
+        }, 5000);
       } else {
         const error = await response.json();
+        setUploadStatus('error');
+        setUploadMessage(`Upload failed: ${error.message || 'Unknown error occurred'}`);
         console.error('Upload failed:', error);
-        // You could add an error message here
+        
+        // Clear error message after 8 seconds
+        setTimeout(() => {
+          setUploadStatus('idle');
+          setUploadMessage('');
+        }, 8000);
       }
     } catch (error) {
+      setUploadStatus('error');
+      setUploadMessage('Upload failed: Network error or server unavailable');
       console.error('Upload error:', error);
-      // You could add an error message here
+      
+      // Clear error message after 8 seconds
+      setTimeout(() => {
+        setUploadStatus('idle');
+        setUploadMessage('');
+      }, 8000);
     }
 
     // Reset the input
@@ -326,6 +354,7 @@ const AIParametersSidebar = () => {
               variant="outlined"
               startIcon={<CloudUpload />}
               fullWidth
+              disabled={uploadStatus === 'uploading'}
               sx={{ 
                 mb: 1,
                 textTransform: 'none',
@@ -334,17 +363,33 @@ const AIParametersSidebar = () => {
                 '&:hover': {
                   borderColor: '#357ABD',
                   backgroundColor: 'rgba(74, 144, 226, 0.04)'
+                },
+                '&:disabled': {
+                  borderColor: '#ccc',
+                  color: '#999'
                 }
               }}
             >
-              Upload PDF
+              {uploadStatus === 'uploading' ? 'Uploading...' : 'Upload PDF'}
               <input
                 type="file"
                 accept=".pdf,.docx,.txt,.md"
                 onChange={handleFileUpload}
                 style={{ display: 'none' }}
+                disabled={uploadStatus === 'uploading'}
               />
             </Button>
+            
+            {/* Upload Status Message */}
+            {uploadStatus !== 'idle' && (
+              <Alert 
+                severity={uploadStatus === 'success' ? 'success' : uploadStatus === 'error' ? 'error' : 'info'}
+                sx={{ mb: 1, fontSize: '0.75rem' }}
+              >
+                {uploadMessage}
+              </Alert>
+            )}
+            
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', lineHeight: 1.3 }}>
               Upload documents to expand the RAG knowledge base. Supports PDF, DOCX, TXT, and MD files.
             </Typography>
