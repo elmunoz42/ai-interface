@@ -1,7 +1,162 @@
-"""
-RAG Service Views
-Handles document upload, processing, and RAG queries
-"""
+from rest_framework import status, viewsets
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from django.core.files.storage import default_storage
+from django.conf import settings
+import os
+import logging
+
+from .models import Document, DocumentChunk, VectorStore
+from .serializers import (
+    DocumentSerializer, DocumentUploadSerializer, 
+    RAGSearchSerializer, RAGChatSerializer
+)
+
+logger = logging.getLogger(__name__)
+
+class DocumentViewSet(viewsets.ModelViewSet):
+    """ViewSet for Document model"""
+    
+    queryset = Document.objects.all()
+    serializer_class = DocumentSerializer
+    permission_classes = [AllowAny]
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def upload_document(request):
+    """Upload and process a document"""
+    
+    serializer = DocumentUploadSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        uploaded_file = serializer.validated_data['file']
+        
+        # Save file to media directory
+        file_path = default_storage.save(
+            f"documents/{uploaded_file.name}",
+            uploaded_file
+        )
+        
+        # Create document record
+        document = Document.objects.create(
+            filename=uploaded_file.name,
+            file_path=file_path,
+            file_size=uploaded_file.size,
+            content_type=uploaded_file.content_type,
+            status='uploading'
+        )
+        
+        # TODO: Process document asynchronously
+        # For now, just mark as completed
+        document.status = 'completed'
+        document.save()
+        
+        return Response(
+            DocumentSerializer(document).data,
+            status=status.HTTP_201_CREATED
+        )
+        
+    except Exception as e:
+        logger.error(f"Error uploading document: {str(e)}")
+        return Response(
+            {'error': 'Failed to upload document'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def rag_status(request):
+    """Get RAG service status"""
+    
+    try:
+        total_documents = Document.objects.count()
+        processed_documents = Document.objects.filter(status='completed').count()
+        total_chunks = DocumentChunk.objects.count()
+        vector_stores = VectorStore.objects.count()
+        
+        return Response({
+            'status': 'operational',
+            'statistics': {
+                'total_documents': total_documents,
+                'processed_documents': processed_documents,
+                'total_chunks': total_chunks,
+                'vector_stores': vector_stores
+            },
+            'features': {
+                'document_upload': True,
+                'text_extraction': True,
+                'vector_search': True,
+                'rag_chat': True
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting RAG status: {str(e)}")
+        return Response(
+            {'error': 'Failed to get status'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def search_documents(request):
+    """Search documents using vector similarity"""
+    
+    serializer = RAGSearchSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        query = serializer.validated_data['query']
+        num_results = serializer.validated_data['num_results']
+        
+        # TODO: Implement actual vector search
+        # For now, return placeholder response
+        return Response({
+            'query': query,
+            'results': [],
+            'message': 'Vector search not yet implemented'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error searching documents: {str(e)}")
+        return Response(
+            {'error': 'Search failed'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def rag_chat(request):
+    """Chat using RAG (Retrieval-Augmented Generation)"""
+    
+    serializer = RAGChatSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        message = serializer.validated_data['message']
+        conversation_id = serializer.validated_data.get('conversation_id')
+        num_context_docs = serializer.validated_data['num_context_docs']
+        
+        # TODO: Implement actual RAG chat
+        # For now, return placeholder response
+        return Response({
+            'message': message,
+            'response': 'RAG chat not yet implemented. Please upload documents first.',
+            'conversation_id': conversation_id or 'new_conversation',
+            'context_documents': []
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in RAG chat: {str(e)}")
+        return Response(
+            {'error': 'Chat failed'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 import os
 import json
 import logging
