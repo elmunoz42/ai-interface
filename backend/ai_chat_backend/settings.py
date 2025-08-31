@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     # Local apps
     'rag_service',
     'chat_api',
+    'document_store',
 ]
 
 MIDDLEWARE = [
