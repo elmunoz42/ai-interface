@@ -158,18 +158,59 @@ def rag_chat(request):
         message = serializer.validated_data['message']
         conversation_id = serializer.validated_data.get('conversation_id')
         num_context_docs = serializer.validated_data['num_context_docs']
+        similarity_threshold = serializer.validated_data.get('similarity_threshold', 0.0)
         
         # Get relevant documents
         vector_store = get_vector_store_service()
         context_docs = vector_store.similarity_search(message, k=num_context_docs)
         
-        # For now, return the context documents
-        # TODO: Integrate with LLM for actual RAG response
+        # Filter by similarity threshold if provided
+        if similarity_threshold > 0:
+            context_docs = [doc for doc in context_docs if doc.get('similarity_score', 0) >= similarity_threshold]
+        
+        # Create context string from relevant documents
+        context_text = ""
+        if context_docs:
+            context_text = "\n\n".join([
+                f"Document: {doc.get('document_filename', 'Unknown')}\nContent: {doc.get('content', '')}" 
+                for doc in context_docs
+            ])
+        
+        # Create RAG prompt
+        rag_prompt = f"""Use the following context to answer the question. If the context doesn't contain relevant information, say so.
+
+Context:
+{context_text}
+
+Question: {message}
+
+Answer based on the context provided:"""
+
+        # For now, return a formatted response with context
+        # TODO: Integrate with actual LLM (OpenAI, Anthropic, etc.)
+        if context_docs:
+            response_text = f"""Based on the uploaded documents, I found {len(context_docs)} relevant pieces of information:
+
+{context_text}
+
+This information is related to your question about: "{message}"
+
+Note: Full LLM integration is coming soon. Currently showing retrieved context from your uploaded documents."""
+        else:
+            response_text = f"""I couldn't find relevant information in the uploaded documents to answer your question: "{message}"
+
+You may need to:
+1. Upload more documents that contain relevant information
+2. Try rephrasing your question
+3. Lower the similarity threshold in the RAG parameters"""
+
         return Response({
             'message': message,
-            'response': f'Found {len(context_docs)} relevant document chunks. RAG chat with LLM integration coming soon!',
+            'response': response_text,
             'conversation_id': conversation_id or 'new_conversation',
-            'context_documents': context_docs
+            'context_documents': context_docs,
+            'num_context_docs_found': len(context_docs),
+            'similarity_threshold_used': similarity_threshold
         })
         
     except Exception as e:

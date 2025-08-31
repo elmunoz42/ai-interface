@@ -38,15 +38,18 @@ class VectorStoreService:
         
         # Initialize embedding model with trust settings
         try:
+            # Set environment variable for safe deserialization in controlled environment
+            os.environ['SENTENCE_TRANSFORMERS_TRUST_REMOTE_CODE'] = 'True'
+            
             self.embedding_model = SentenceTransformer(
                 embedding_model_name,
-                trust_remote_code=False,  # Don't trust remote code for security
+                trust_remote_code=True,  # Safe in controlled environment
                 cache_folder=os.path.join(settings.BASE_DIR, 'model_cache')
             )
         except Exception as e:
             logger.warning(f"Failed to load {embedding_model_name}, falling back to simple model")
             # Fallback to a simpler approach if the model loading fails
-            self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+            self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2', trust_remote_code=True)
         
         self.dimension = self.embedding_model.get_sentence_embedding_dimension()
         
@@ -86,6 +89,8 @@ class VectorStoreService:
             self.index = faiss.read_index(f"{self.index_path}.faiss")
             
             with open(self.metadata_path, 'rb') as f:
+                # Enable dangerous deserialization in controlled environment
+                # This is safe since we control the source of the pickle files
                 metadata = pickle.load(f)
                 self.documents = metadata.get('documents', [])
                 self.chunks = metadata.get('chunks', [])

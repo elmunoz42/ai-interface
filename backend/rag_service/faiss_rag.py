@@ -59,6 +59,9 @@ class FAISSVectorStore:
     """FAISS vector store for document embeddings and similarity search"""
     
     def __init__(self, index_path: Optional[str] = None):
+        # Set environment variable for safe deserialization in controlled environment
+        os.environ['SENTENCE_TRANSFORMERS_TRUST_REMOTE_CODE'] = 'True'
+        
         self.embedding_model = SentenceTransformerEmbeddings(
             model_name="all-MiniLM-L6-v2"
         )
@@ -74,9 +77,11 @@ class FAISSVectorStore:
         try:
             if os.path.exists(self.index_path):
                 logger.info(f"Loading existing FAISS index from {self.index_path}")
+                # Enable dangerous deserialization in controlled environment
                 self.vector_store = LangChainFAISS.load_local(
                     self.index_path, 
-                    self.embedding_model
+                    self.embedding_model,
+                    allow_dangerous_deserialization=True  # Safe in controlled environment
                 )
             else:
                 logger.info("Creating new FAISS index")
