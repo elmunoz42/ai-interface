@@ -1,36 +1,114 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
+# Node.js / Next.js Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/dist/
 /.pnp
 .pnp.js
 .yarn/install-state.gz
 
-# testing
+# Testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
-# production
+# Production builds
 /build
 
-# misc
-.DS_Store
-*.pem
+# Python Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# debug
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+backend/media/
+backend/staticfiles/
+
+# Virtual Environment
+backend/ai_chat_env/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# Vector Store / AI Models
+backend/vector_store/
+*.faiss
+*.pkl
+*.model
+
+# OS / IDE
+.DS_Store
+.DS_Store?
+._*
+*.pem
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
+logs/
 
-# local env files
-.env*.local
-
-# vercel
+# Vercel
 .vercel
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+*.cover
+*.py,cover
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
