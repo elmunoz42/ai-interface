@@ -66,9 +66,18 @@ venv.bak/
 
 # Vector Store / AI Models
 backend/vector_store/
+backend/model_cache/
 *.faiss
 *.pkl
 *.model
+
+# Document Uploads and Media Files
+backend/media/documents/
+backend/media/uploads/
+*.pdf
+*.docx
+*.txt
+test_document*.txt
 
 # OS / IDE
 .DS_Store
