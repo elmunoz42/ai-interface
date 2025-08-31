@@ -11,8 +11,10 @@ import {
   MenuItem, 
   SelectChangeEvent, 
   Chip,
-  InputLabel
+  InputLabel,
+  Button
 } from '@mui/material';
+import { CloudUpload } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../lib/store/hooks';
 import { 
   setTemperature, 
@@ -56,6 +58,37 @@ const AIParametersSidebar = () => {
 
   const handleRagSimilarityThresholdChange = (value: number) => {
     dispatch(setRagSimilarityThreshold(value));
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/rag/upload/', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('File uploaded successfully:', result);
+        // You could add a success message here
+      } else {
+        const error = await response.json();
+        console.error('Upload failed:', error);
+        // You could add an error message here
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      // You could add an error message here
+    }
+
+    // Reset the input
+    event.target.value = '';
   };
 
   const getProviderColor = (provider: string) => {
@@ -281,6 +314,40 @@ const AIParametersSidebar = () => {
               <Typography variant="caption">Any</Typography>
               <Typography variant="caption">Exact</Typography>
             </Box>
+          </Box>
+
+          {/* Document Upload */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Knowledge Base
+            </Typography>
+            <Button
+              component="label"
+              variant="outlined"
+              startIcon={<CloudUpload />}
+              fullWidth
+              sx={{ 
+                mb: 1,
+                textTransform: 'none',
+                borderColor: '#4A90E2',
+                color: '#4A90E2',
+                '&:hover': {
+                  borderColor: '#357ABD',
+                  backgroundColor: 'rgba(74, 144, 226, 0.04)'
+                }
+              }}
+            >
+              Upload PDF
+              <input
+                type="file"
+                accept=".pdf,.docx,.txt,.md"
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
+            </Button>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', lineHeight: 1.3 }}>
+              Upload documents to expand the RAG knowledge base. Supports PDF, DOCX, TXT, and MD files.
+            </Typography>
           </Box>
         </>
       )}
