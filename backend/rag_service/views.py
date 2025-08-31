@@ -1,0 +1,216 @@
+"""
+RAG Service Views
+Handles document upload, processing, and RAG queries
+"""
+import os
+import json
+import logging
+from typing import Dict, Any
+
+from django.http import JsonResponse, HttpRequest
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.conf import settings
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework import status
+
+from .faiss_rag import get_vector_store, get_rag_chain
+
+logger = logging.getLogger(__name__)
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def rag_status(request):
+    """Get RAG service status"""
+    try:
+        vector_store = get_vector_store()
+        stats = vector_store.get_stats()
+        
+        return Response({
+            'status': 'operational',
+            'vector_store': stats,
+            'features': {
+                'document_upload': True,
+                'similarity_search': True,
+                'rag_query': True,
+                'supported_formats': ['.pdf', '.txt', '.md']
+            }
+        })
+    except Exception as e:
+        logger.error(f"Error getting RAG status: {str(e)}")
+        return Response({
+            'status': 'error',
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@csrf_exempt
+def upload_documents(request):
+    """Upload and process documents for RAG"""
+    try:
+        if 'files' not in request.FILES:
+            return Response({
+                'error': 'No files provided'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        files = request.FILES.getlist('files')
+        if not files:
+            return Response({
+                'error': 'No files provided'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Save uploaded files and get their paths
+        file_paths = []
+        for file in files:
+            # Validate file type
+            file_extension = os.path.splitext(file.name)[1].lower()
+            if file_extension not in ['.pdf', '.txt', '.md']:
+                continue
+            
+            # Save file
+            file_path = default_storage.save(
+                f"documents/{file.name}",
+                ContentFile(file.read())
+            )
+            full_path = os.path.join(settings.MEDIA_ROOT, file_path)
+            file_paths.append(full_path)
+        
+        if not file_paths:
+            return Response({
+                'error': 'No valid files to process'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Process files with vector store
+        vector_store = get_vector_store()
+        results = vector_store.add_documents(file_paths)
+        
+        # Clean up temporary files
+        for file_path in file_paths:
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                logger.warning(f"Could not remove temporary file {file_path}: {str(e)}")
+        
+        return Response({
+            'message': 'Documents processed successfully',
+            'results': results
+        })
+        
+    except Exception as e:
+        logger.error(f"Error uploading documents: {str(e)}")
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def similarity_search(request):
+    """Perform similarity search in the vector store"""
+    try:
+        data = json.loads(request.body)
+        query = data.get('query', '').strip()
+        k = min(int(data.get('k', 4)), 10)  # Limit to max 10 results
+        
+        if not query:
+            return Response({
+                'error': 'Query is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        vector_store = get_vector_store()
+        results = vector_store.similarity_search(query, k=k)
+        
+        return Response({
+            'query': query,
+            'results': [
+                {
+                    'content': doc.page_content,
+                    'metadata': doc.metadata,
+                    'similarity_score': getattr(doc, 'similarity_score', None)
+                }
+                for doc in results
+            ]
+        })
+        
+    except json.JSONDecodeError:
+        return Response({
+            'error': 'Invalid JSON in request body'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        logger.error(f"Error in similarity search: {str(e)}")
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def rag_query(request):
+    """Perform RAG (Retrieval-Augmented Generation) query"""
+    try:
+        data = json.loads(request.body)
+        question = data.get('question', '').strip()
+        llm_provider = data.get('llm_provider', 'openai')
+        
+        if not question:
+            return Response({
+                'error': 'Question is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate LLM provider
+        if llm_provider not in ['openai']:
+            return Response({
+                'error': f'Unsupported LLM provider: {llm_provider}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if OpenAI API key is configured
+        if llm_provider == 'openai' and not os.getenv('OPENAI_API_KEY'):
+            return Response({
+                'error': 'OpenAI API key not configured'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        rag_chain = get_rag_chain(llm_provider)
+        result = rag_chain.query(question)
+        
+        return Response(result)
+        
+    except json.JSONDecodeError:
+        return Response({
+            'error': 'Invalid JSON in request body'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        logger.error(f"Error in RAG query: {str(e)}")
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def clear_vector_store(request):
+    """Clear the vector store (for development/testing)"""
+    try:
+        vector_store = get_vector_store()
+        
+        # Remove the index file
+        if os.path.exists(settings.FAISS_INDEX_PATH):
+            import shutil
+            shutil.rmtree(settings.FAISS_INDEX_PATH)
+        
+        # Reset global instances
+        global _vector_store, _rag_chain
+        _vector_store = None
+        _rag_chain = None
+        
+        return Response({
+            'message': 'Vector store cleared successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error clearing vector store: {str(e)}")
+        return Response({
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
