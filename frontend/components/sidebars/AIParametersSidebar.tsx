@@ -18,12 +18,24 @@ import {
   setTemperature, 
   setMaxTokens, 
   setSelectedModel,
-  type LLMModel 
+  setRagNumContextDocs,
+  setRagSimilarityThreshold,
+  setModel,
+  type LLMModel,
+  type AIModel
 } from '../../lib/store/aiParamsSlice';
 
 const AIParametersSidebar = () => {
   const dispatch = useAppDispatch();
-  const { temperature, maxTokens, selectedModel, availableModels } = useAppSelector(state => state.aiParams);
+  const { 
+    temperature, 
+    maxTokens, 
+    selectedModel, 
+    availableModels,
+    ragNumContextDocs,
+    ragSimilarityThreshold,
+    model
+  } = useAppSelector(state => state.aiParams);
 
   const handleTemperatureChange = (value: number) => {
     dispatch(setTemperature(value));
@@ -39,6 +51,18 @@ const AIParametersSidebar = () => {
     if (model) {
       dispatch(setSelectedModel(model));
     }
+  };
+
+  const handleRagNumContextDocsChange = (value: number) => {
+    dispatch(setRagNumContextDocs(value));
+  };
+
+  const handleRagSimilarityThresholdChange = (value: number) => {
+    dispatch(setRagSimilarityThreshold(value));
+  };
+
+  const handleAIModelChange = (event: SelectChangeEvent<AIModel>) => {
+    dispatch(setModel(event.target.value as AIModel));
   };
 
   const getProviderColor = (provider: string) => {
@@ -77,11 +101,32 @@ const AIParametersSidebar = () => {
         AI Parameters
       </Typography>
       
-      {/* Model Selection */}
+      {/* AI Model Type Selection */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="subtitle2" gutterBottom>
-          Language Model
+          AI Model Type
         </Typography>
+        <FormControl fullWidth size="small" sx={{ mb: 1 }}>
+          <InputLabel>Select AI Model</InputLabel>
+          <Select
+            value={model}
+            onChange={handleAIModelChange}
+            label="Select AI Model"
+          >
+            <MenuItem value="openai">OpenAI Models</MenuItem>
+            <MenuItem value="anthropic">Anthropic Models</MenuItem>
+            <MenuItem value="cloudflare">Cloudflare Models</MenuItem>
+            <MenuItem value="rag">RAG with FAISS</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+      
+      {/* Model Selection */}
+      {model !== 'rag' && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" gutterBottom>
+            Language Model
+          </Typography>
         <FormControl fullWidth size="small" sx={{ mb: 1 }}>
           <InputLabel>Select Model</InputLabel>
           <Select
@@ -152,60 +197,117 @@ const AIParametersSidebar = () => {
           </Typography>
         </Box>
       </Box>
+      )}
 
-      {/* Temperature Control */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="subtitle2" gutterBottom>
-          Temperature: {temperature}
-        </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-          Controls randomness (0.0 = focused, 1.0 = creative)
-        </Typography>
-        <Slider
-          value={temperature}
-          onChange={(_, value) => handleTemperatureChange(value as number)}
-          min={0}
-          max={1}
-          step={0.1}
-          size="small"
-          sx={{ mb: 1 }}
-        />
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography variant="caption">Focused</Typography>
-          <Typography variant="caption">Creative</Typography>
-        </Box>
-      </Box>
+      {/* Temperature Control and Max Tokens - Only for LLM models */}
+      {model !== 'rag' && (
+        <>
+          {/* Temperature Control */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Temperature: {temperature}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+              Controls randomness (0.0 = focused, 1.0 = creative)
+            </Typography>
+            <Slider
+              value={temperature}
+              onChange={(_, value) => handleTemperatureChange(value as number)}
+              min={0}
+              max={1}
+              step={0.1}
+              size="small"
+              sx={{ mb: 1 }}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="caption">Focused</Typography>
+              <Typography variant="caption">Creative</Typography>
+            </Box>
+          </Box>
 
-      {/* Max Tokens Control */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="subtitle2" gutterBottom>
-          Max Tokens
-        </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-          Maximum length of the AI response
-        </Typography>
-        <TextField
-          type="number"
-          value={maxTokens}
-          onChange={(e) => handleMaxTokensChange(parseInt(e.target.value) || 1000)}
-          size="small"
-          fullWidth
-          inputProps={{ min: 50, max: selectedModel.maxTokens, step: 50 }}
-          sx={{ mb: 1 }}
-        />
-        <Slider
-          value={maxTokens}
-          onChange={(_, value) => handleMaxTokensChange(value as number)}
-          min={50}
-          max={selectedModel.maxTokens}
-          step={50}
-          size="small"
-        />
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          <Typography variant="caption">50</Typography>
-          <Typography variant="caption">{selectedModel.maxTokens.toLocaleString()}</Typography>
-        </Box>
-      </Box>
+          {/* Max Tokens Control */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Max Tokens
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+              Maximum length of the AI response
+            </Typography>
+            <TextField
+              type="number"
+              value={maxTokens}
+              onChange={(e) => handleMaxTokensChange(parseInt(e.target.value) || 1000)}
+              size="small"
+              fullWidth
+              inputProps={{ min: 50, max: selectedModel.maxTokens, step: 50 }}
+              sx={{ mb: 1 }}
+            />
+            <Slider
+              value={maxTokens}
+              onChange={(_, value) => handleMaxTokensChange(value as number)}
+              min={50}
+              max={selectedModel.maxTokens}
+              step={50}
+              size="small"
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="caption">50</Typography>
+              <Typography variant="caption">{selectedModel.maxTokens.toLocaleString()}</Typography>
+            </Box>
+          </Box>
+        </>
+      )}
+
+      {/* RAG Parameters */}
+      {model === 'rag' && (
+        <>
+          {/* Number of Context Documents */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Context Documents: {ragNumContextDocs}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+              Number of relevant documents to retrieve
+            </Typography>
+            <Slider
+              value={ragNumContextDocs}
+              onChange={(_, value) => handleRagNumContextDocsChange(value as number)}
+              min={1}
+              max={10}
+              step={1}
+              size="small"
+              sx={{ mb: 1 }}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="caption">1</Typography>
+              <Typography variant="caption">10</Typography>
+            </Box>
+          </Box>
+
+          {/* Similarity Threshold */}
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" gutterBottom>
+              Similarity Threshold: {ragSimilarityThreshold}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+              Minimum relevance score for document retrieval (0.0 = any, 1.0 = exact match)
+            </Typography>
+            <Slider
+              value={ragSimilarityThreshold}
+              onChange={(_, value) => handleRagSimilarityThresholdChange(value as number)}
+              min={0}
+              max={1}
+              step={0.1}
+              size="small"
+              sx={{ mb: 1 }}
+            />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="caption">Any</Typography>
+              <Typography variant="caption">Exact</Typography>
+            </Box>
+          </Box>
+        </>
+      )}
     </Box>
   );
 };
