@@ -1,0 +1,43 @@
+# Backend-specific gitignore for Django AI Chat
+
+# Environment files
+.env*
+!.env.example
+
+# Database
+db.sqlite3
+db.sqlite3-journal
+
+# Media files (uploaded documents)
+media/documents/
+media/uploads/
+*.pdf
+*.docx
+*.txt
+test_document*.txt
+
+# Vector Store and AI Models
+vector_store/
+vector_store.*
+model_cache/
+*.faiss
+*.pkl
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+ai_chat_env/
+venv/
+env/
+
+# Logs
+*.log
+logs/
+
+# Static files
+staticfiles/
