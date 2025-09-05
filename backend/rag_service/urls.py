@@ -16,4 +16,5 @@ urlpatterns = [
     path('search/', views.search_documents, name='search_documents'),
     path('chat/', views.rag_chat, name='rag_chat'),
     path('clear/', views.clear_vector_store, name='clear_vector_store'),
+    path('file/<uuid:pk>/', views.get_document_file, name='get_document_file'),
 ]

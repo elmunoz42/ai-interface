@@ -1,3 +1,25 @@
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, Http404
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_document_file(request, pk):
+    """Serve the contents of a document file securely"""
+    try:
+        doc = Document.objects.get(pk=pk)
+        file_path = os.path.join(settings.MEDIA_ROOT, doc.file_path)
+        if not os.path.exists(file_path):
+            raise Http404("File not found")
+        # Optionally check user permissions here
+        with open(file_path, 'rb') as f:
+            response = HttpResponse(f.read(), content_type=doc.content_type)
+            response['Content-Disposition'] = f'inline; filename="{doc.filename}"'
+            return response
+    except Document.DoesNotExist:
+        raise Http404("Document not found")
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny

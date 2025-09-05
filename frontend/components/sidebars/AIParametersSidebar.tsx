@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
+import Modal from '@mui/material/Modal';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import {
   Box, 
   Typography, 
   TextField, 
@@ -12,14 +14,15 @@ import {
   SelectChangeEvent, 
   Chip,
   InputLabel,
-  Button,
   Alert,
   Tabs,
   Tab,
   List,
   ListItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  IconButton,
+  Button
 } from '@mui/material';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -35,6 +38,51 @@ import {
 } from '../../lib/store/aiParamsSlice';
 
 const AIParametersSidebar = () => {
+  // Modal state for file preview
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalFile, setModalFile] = useState<any | null>(null);
+  const [modalContent, setModalContent] = useState<string | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  // Modal style
+  const modalStyle = {
+    position: 'absolute' as const,
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 600,
+    bgcolor: 'background.paper',
+    boxShadow: 24,
+    p: 4,
+    maxHeight: '80vh',
+    overflowY: 'auto',
+  };
+  // Preview file in modal
+  const handleFilePreview = async (file: any) => {
+    setModalOpen(true);
+    setModalFile(file);
+    setModalLoading(true);
+    try {
+      const res = await fetch(`/api/rag/file/${file.id}/`, { credentials: 'include' });
+      if (res.ok) {
+        if (file.content_type && file.content_type.startsWith('text')) {
+          const text = await res.text();
+          setModalContent(text);
+        } else {
+          setModalContent('Preview not available for this file type.');
+        }
+      } else {
+        setModalContent('Failed to load file.');
+      }
+    } catch (e) {
+      setModalContent('Error loading file.');
+    }
+    setModalLoading(false);
+  };
+
+  // Download file securely
+  const handleFileDownload = (file: any) => {
+    window.open(`/api/rag/file/${file.id}/`, '_blank');
+  };
   const [tabIndex, setTabIndex] = useState(0);
   const [kbFiles, setKbFiles] = useState<any[]>([]);
   // Fetch knowledge base files when Knowledge Base tab is selected
@@ -426,14 +474,14 @@ const AIParametersSidebar = () => {
             ) : (
               kbFiles.map((file, idx) => (
                 <ListItem key={idx} secondaryAction={
-                  <a
-                    href={`http://127.0.0.1:8000/media/documents/${encodeURIComponent(file.filename)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', color: '#1976d2' }}
-                  >
-                    <DownloadIcon fontSize="small" />
-                  </a>
+                  <>
+                    <IconButton onClick={() => handleFilePreview(file)}>
+                      <VisibilityIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton onClick={() => handleFileDownload(file)}>
+                      <DownloadIcon fontSize="small" />
+                    </IconButton>
+                  </>
                 }>
                   <ListItemIcon>
                     <InsertDriveFileIcon fontSize="small" />
@@ -446,6 +494,26 @@ const AIParametersSidebar = () => {
               ))
             )}
           </List>
+          <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+            <Box sx={modalStyle}>
+              <h2>{modalFile?.filename}</h2>
+              {modalLoading ? (
+                <div>Loading...</div>
+              ) : (
+                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{modalContent}</pre>
+              )}
+              <Button
+                variant="contained"
+                sx={{ mt: 2 }}
+                onClick={() => modalFile && handleFileDownload(modalFile)}
+              >
+                Download
+              </Button>
+              <Button sx={{ mt: 2, ml: 2 }} onClick={() => setModalOpen(false)}>
+                Close
+              </Button>
+            </Box>
+          </Modal>
         </>
       )}
     </Box>
