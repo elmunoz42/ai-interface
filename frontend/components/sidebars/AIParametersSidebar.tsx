@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Typography, 
@@ -13,8 +13,15 @@ import {
   Chip,
   InputLabel,
   Button,
-  Alert
+  Alert,
+  Tabs,
+  Tab,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import { CloudUpload } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../lib/store/hooks';
 import { 
@@ -27,6 +34,23 @@ import {
 } from '../../lib/store/aiParamsSlice';
 
 const AIParametersSidebar = () => {
+  const [tabIndex, setTabIndex] = useState(0);
+  const [kbFiles, setKbFiles] = useState<string[]>([]);
+  // Fetch knowledge base files when Knowledge Base tab is selected
+  useEffect(() => {
+    if (tabIndex === 1) {
+      fetch('http://127.0.0.1:8000/api/rag/files/')
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data.files)) {
+            setKbFiles(data.files);
+          } else {
+            setKbFiles([]);
+          }
+        })
+        .catch(() => setKbFiles([]));
+    }
+  }, [tabIndex]);
   const dispatch = useAppDispatch();
   const { 
     temperature, 
@@ -153,238 +177,261 @@ const AIParametersSidebar = () => {
         flexDirection: 'column'
       }}
     >
-      <Typography variant="h6" sx={{ mb: 1.5, mt: 0 }}>
-        AI Parameters
-      </Typography>
-      
-      {/* Model Selection - Always visible */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="subtitle2" gutterBottom>
-          Model Selection
-        </Typography>
-        <FormControl fullWidth size="small" sx={{ mb: 1 }}>
-          <InputLabel>Select Model</InputLabel>
-          <Select
-            value={selectedModel.id}
-            onChange={handleModelChange}
-            label="Select Model"
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  maxWidth: 400, // Allow wider dropdown
-                  '& .MuiMenuItem-root': {
-                    whiteSpace: 'normal', // Allow text wrapping
-                    minHeight: 'auto', // Allow variable height
-                    padding: '12px 16px', // More padding for better spacing
-                  }
-                }
-              }
-            }}
-          >
-            {availableModels.map((model) => (
-              <MenuItem key={model.id} value={model.id}>
-                <Box sx={{ width: '100%' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                    <Typography variant="body2" fontWeight="medium">
-                      {model.name}
-                    </Typography>
-                    <Chip
-                      label={getProviderLabel(model.provider)}
-                      size="small"
-                      sx={{
-                        bgcolor: getProviderColor(model.provider),
-                        color: 'white',
-                        fontSize: '0.75rem',
-                        height: 20,
-                        flexShrink: 0 // Prevent chip from shrinking
-                      }}
-                    />
-                  </Box>
-                  <Typography 
-                    variant="caption" 
-                    color="text.secondary"
-                    sx={{ 
-                      display: 'block',
-                      whiteSpace: 'normal',
-                      wordWrap: 'break-word',
-                      lineHeight: 1.3
-                    }}
-                  >
-                    {model.description}
-                  </Typography>
-                </Box>
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Chip
-            label={getProviderLabel(selectedModel.provider)}
-            size="small"
-            sx={{
-              bgcolor: getProviderColor(selectedModel.provider),
-              color: 'white',
-              fontSize: '0.75rem'
-            }}
-          />
-          <Typography variant="caption" color="text.secondary">
-            {selectedModel.id !== 'rag-faiss' 
-              ? `Max: ${selectedModel.maxTokens.toLocaleString()} tokens`
-              : 'Document-based AI with vector search'
-            }
-          </Typography>
-        </Box>
-      </Box>
+      <Tabs value={tabIndex} onChange={(_, v) => setTabIndex(v)} variant="fullWidth" sx={{ mb: 2 }}>
+        <Tab label="AI Params" />
+        <Tab label="KB Files" />
+      </Tabs>
 
-      {/* LLM-specific parameters - Temperature Control and Max Tokens (always visible) */}
-      <>
-        {/* Temperature Control */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            Temperature: {temperature}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-            Controls randomness (0.0 = focused, 1.0 = creative)
-          </Typography>
-          <Slider
-            value={temperature}
-            onChange={(_, value) => handleTemperatureChange(value as number)}
-            min={0}
-            max={1}
-            step={0.1}
-            size="small"
-            sx={{ mb: 1 }}
-          />
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography variant="caption">Focused</Typography>
-            <Typography variant="caption">Creative</Typography>
-          </Box>
-        </Box>
-
-        {/* Max Tokens Control */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" gutterBottom>
-            Max Tokens
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-            Maximum length of the AI response
-          </Typography>
-          <TextField
-            type="number"
-            value={maxTokens}
-            onChange={(e) => handleMaxTokensChange(parseInt(e.target.value) || 1000)}
-            size="small"
-            fullWidth
-            inputProps={{ min: 50, max: selectedModel.maxTokens, step: 50 }}
-            sx={{ mb: 1 }}
-          />
-          <Slider
-            value={maxTokens}
-            onChange={(_, value) => handleMaxTokensChange(value as number)}
-            min={50}
-            max={selectedModel.maxTokens}
-            step={50}
-            size="small"
-          />
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography variant="caption">50</Typography>
-            <Typography variant="caption">{selectedModel.maxTokens.toLocaleString()}</Typography>
-          </Box>
-        </Box>
-      </>
-
-      {/* RAG Parameters */}
-      {selectedModel.id === 'rag-faiss' && (
+      {tabIndex === 0 && (
         <>
-
-          {/* Similarity Threshold */}
-          <Box sx={{ mb: 3 }}>
+          {/* Model Selection - Always visible */}
+          <Box sx={{ mb: 2 }}>
             <Typography variant="subtitle2" gutterBottom>
-              Similarity Threshold: {ragSimilarityThreshold}
+              Model Selection
             </Typography>
-            <Slider
-              value={ragSimilarityThreshold}
-              onChange={(_, value) => handleRagSimilarityThresholdChange(value as number)}
-              min={0}
-              max={1}
-              step={0.1}
-              size="small"
-              sx={{ mb: 1 }}
-            />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography variant="caption">Any</Typography>
-              <Typography variant="caption">Exact</Typography>
+            <FormControl fullWidth size="small" sx={{ mb: 1 }}>
+              <InputLabel>Select Model</InputLabel>
+              <Select
+                value={selectedModel.id}
+                onChange={handleModelChange}
+                label="Select Model"
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      maxWidth: 400,
+                      '& .MuiMenuItem-root': {
+                        whiteSpace: 'normal',
+                        minHeight: 'auto',
+                        padding: '12px 16px',
+                      }
+                    }
+                  }
+                }}
+              >
+                {availableModels.map((model) => (
+                  <MenuItem key={model.id} value={model.id}>
+                    <Box sx={{ width: '100%' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        <Typography variant="body2" fontWeight="medium">
+                          {model.name}
+                        </Typography>
+                        <Chip
+                          label={getProviderLabel(model.provider)}
+                          size="small"
+                          sx={{
+                            bgcolor: getProviderColor(model.provider),
+                            color: 'white',
+                            fontSize: '0.75rem',
+                            height: 20,
+                            flexShrink: 0
+                          }}
+                        />
+                      </Box>
+                      <Typography 
+                        variant="caption" 
+                        color="text.secondary"
+                        sx={{ 
+                          display: 'block',
+                          whiteSpace: 'normal',
+                          wordWrap: 'break-word',
+                          lineHeight: 1.3
+                        }}
+                      >
+                        {model.description}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Chip
+                label={getProviderLabel(selectedModel.provider)}
+                size="small"
+                sx={{
+                  bgcolor: getProviderColor(selectedModel.provider),
+                  color: 'white',
+                  fontSize: '0.75rem'
+                }}
+              />
+              <Typography variant="caption" color="text.secondary">
+                {selectedModel.id !== 'rag-faiss' 
+                  ? `Max: ${selectedModel.maxTokens.toLocaleString()} tokens`
+                  : 'Document-based AI with vector search'
+                }
+              </Typography>
             </Box>
           </Box>
 
-                    {/* Number of Context Documents - now a single-line number input */}
-          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Context Documents
-            </Typography>
-            <TextField
-              type="number"
-              value={ragNumContextDocs}
-              onChange={e => {
-                const val = Math.max(1, Math.min(10, parseInt(e.target.value) || 1));
-                handleRagNumContextDocsChange(val);
-              }}
-              size="small"
-              inputProps={{ min: 1, max: 10, step: 1 }}
-              sx={{ width: 70 }}
-            />
-          </Box>
-
-          {/* Document Upload */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Knowledge Base
-            </Typography>
-            <Button
-              component="label"
-              variant="outlined"
-              startIcon={<CloudUpload />}
-              fullWidth
-              disabled={uploadStatus === 'uploading'}
-              sx={{ 
-                mb: 1,
-                textTransform: 'none',
-                borderColor: '#4A90E2',
-                color: '#4A90E2',
-                '&:hover': {
-                  borderColor: '#357ABD',
-                  backgroundColor: 'rgba(74, 144, 226, 0.04)'
-                },
-                '&:disabled': {
-                  borderColor: '#ccc',
-                  color: '#999'
-                }
-              }}
-            >
-              {uploadStatus === 'uploading' ? 'Uploading...' : 'Upload PDF'}
-              <input
-                type="file"
-                accept=".pdf,.docx,.txt,.md"
-                onChange={handleFileUpload}
-                style={{ display: 'none' }}
-                disabled={uploadStatus === 'uploading'}
+          {/* LLM-specific parameters - Temperature Control and Max Tokens (always visible) */}
+          <>
+            {/* Temperature Control */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Temperature: {temperature}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                Controls randomness (0.0 = focused, 1.0 = creative)
+              </Typography>
+              <Slider
+                value={temperature}
+                onChange={(_, value) => handleTemperatureChange(value as number)}
+                min={0}
+                max={1}
+                step={0.1}
+                size="small"
+                sx={{ mb: 1 }}
               />
-            </Button>
-            
-            {/* Upload Status Message */}
-            {uploadStatus !== 'idle' && (
-              <Alert 
-                severity={uploadStatus === 'success' ? 'success' : uploadStatus === 'error' ? 'error' : 'info'}
-                sx={{ mb: 1, fontSize: '0.75rem' }}
-              >
-                {uploadMessage}
-              </Alert>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant="caption">Focused</Typography>
+                <Typography variant="caption">Creative</Typography>
+              </Box>
+            </Box>
+
+            {/* Max Tokens Control */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                Max Tokens
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+                Maximum length of the AI response
+              </Typography>
+              <TextField
+                type="number"
+                value={maxTokens}
+                onChange={(e) => handleMaxTokensChange(parseInt(e.target.value) || 1000)}
+                size="small"
+                fullWidth
+                inputProps={{ min: 50, max: selectedModel.maxTokens, step: 50 }}
+                sx={{ mb: 1 }}
+              />
+              <Slider
+                value={maxTokens}
+                onChange={(_, value) => handleMaxTokensChange(value as number)}
+                min={50}
+                max={selectedModel.maxTokens}
+                step={50}
+                size="small"
+              />
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant="caption">50</Typography>
+                <Typography variant="caption">{selectedModel.maxTokens.toLocaleString()}</Typography>
+              </Box>
+            </Box>
+          </>
+
+          {/* RAG Parameters */}
+          {selectedModel.id === 'rag-faiss' && (
+            <>
+              {/* Similarity Threshold */}
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Similarity Threshold: {ragSimilarityThreshold}
+                </Typography>
+                <Slider
+                  value={ragSimilarityThreshold}
+                  onChange={(_, value) => handleRagSimilarityThresholdChange(value as number)}
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  size="small"
+                  sx={{ mb: 1 }}
+                />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="caption">Any</Typography>
+                  <Typography variant="caption">Exact</Typography>
+                </Box>
+              </Box>
+
+              {/* Number of Context Documents - now a single-line number input */}
+              <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Context Documents
+                </Typography>
+                <TextField
+                  type="number"
+                  value={ragNumContextDocs}
+                  onChange={e => {
+                    const val = Math.max(1, Math.min(10, parseInt(e.target.value) || 1));
+                    handleRagNumContextDocsChange(val);
+                  }}
+                  size="small"
+                  inputProps={{ min: 1, max: 10, step: 1 }}
+                  sx={{ width: 70 }}
+                />
+              </Box>
+
+              {/* Document Upload */}
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Knowledge Base
+                </Typography>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  startIcon={<CloudUpload />}
+                  fullWidth
+                  disabled={uploadStatus === 'uploading'}
+                  sx={{ 
+                    mb: 1,
+                    textTransform: 'none',
+                    borderColor: '#4A90E2',
+                    color: '#4A90E2',
+                    '&:hover': {
+                      borderColor: '#357ABD',
+                      backgroundColor: 'rgba(74, 144, 226, 0.04)'
+                    },
+                    '&:disabled': {
+                      borderColor: '#ccc',
+                      color: '#999'
+                    }
+                  }}
+                >
+                  {uploadStatus === 'uploading' ? 'Uploading...' : 'Upload PDF'}
+                  <input
+                    type="file"
+                    accept=".pdf,.docx,.txt,.md"
+                    onChange={handleFileUpload}
+                    style={{ display: 'none' }}
+                    disabled={uploadStatus === 'uploading'}
+                  />
+                </Button>
+                {/* Upload Status Message */}
+                {uploadStatus !== 'idle' && (
+                  <Alert 
+                    severity={uploadStatus === 'success' ? 'success' : uploadStatus === 'error' ? 'error' : 'info'}
+                    sx={{ mb: 1, fontSize: '0.75rem' }}
+                  >
+                    {uploadMessage}
+                  </Alert>
+                )}
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', lineHeight: 1.3 }}>
+                  Supports PDF, DOCX, TXT and MD files.
+                </Typography>
+              </Box>
+            </>
+          )}
+        </>
+      )}
+
+      {tabIndex === 1 && (
+        <>
+          <List dense>
+            {kbFiles.length === 0 ? (
+              <ListItem>
+                <ListItemText primary="No files uploaded." />
+              </ListItem>
+            ) : (
+              kbFiles.map((file, idx) => (
+                <ListItem key={idx}>
+                  <ListItemIcon>
+                    <InsertDriveFileIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary={file} />
+                </ListItem>
+              ))
             )}
-            
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', lineHeight: 1.3 }}>
-              Supports PDF, DOCX, TXT and MD files.
-            </Typography>
-          </Box>
+          </List>
         </>
       )}
     </Box>
