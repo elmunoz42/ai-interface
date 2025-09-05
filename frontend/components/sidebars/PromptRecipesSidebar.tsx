@@ -39,6 +39,7 @@ import {
   deleteRecipe,
   PromptRecipe
 } from '../../lib/store/promptRecipesSlice';
+import { setSelectedModel, setTemperature, setMaxTokens } from '../../lib/store/aiParamsSlice';
 
 const PromptRecipesSidebar = () => {
   // Restore missing handler functions
@@ -70,6 +71,19 @@ const PromptRecipesSidebar = () => {
   const handlePromptRecipe = (recipe: PromptRecipe) => {
     dispatch(setInputText(recipe.prompt));
     dispatch(setSelectedPromptRecipe(recipe.title));
+    // Apply LLM settings from recipe if present
+    if (recipe.modelId) {
+      const model = aiParams.availableModels.find(m => m.id === recipe.modelId);
+      if (model) {
+        dispatch(setSelectedModel(model));
+      }
+    }
+    if (typeof recipe.temperature === 'number') {
+      dispatch(setTemperature(recipe.temperature));
+    }
+    if (typeof recipe.maxTokens === 'number') {
+      dispatch(setMaxTokens(recipe.maxTokens));
+    }
   };
 
   // Save current LLM settings to the recipe being edited
