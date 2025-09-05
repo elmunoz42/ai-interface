@@ -22,6 +22,7 @@ import {
   ListItemText
 } from '@mui/material';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import DownloadIcon from '@mui/icons-material/Download';
 import { CloudUpload } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../lib/store/hooks';
 import { 
@@ -35,15 +36,16 @@ import {
 
 const AIParametersSidebar = () => {
   const [tabIndex, setTabIndex] = useState(0);
-  const [kbFiles, setKbFiles] = useState<string[]>([]);
+  const [kbFiles, setKbFiles] = useState<any[]>([]);
   // Fetch knowledge base files when Knowledge Base tab is selected
   useEffect(() => {
     if (tabIndex === 1) {
-      fetch('http://127.0.0.1:8000/api/rag/files/')
+      fetch('http://127.0.0.1:8000/api/rag/documents/')
         .then(res => res.json())
         .then(data => {
-          if (Array.isArray(data.files)) {
-            setKbFiles(data.files);
+          // DRF paginated response: { count, next, previous, results }
+          if (Array.isArray(data.results)) {
+            setKbFiles(data.results);
           } else {
             setKbFiles([]);
           }
@@ -423,11 +425,23 @@ const AIParametersSidebar = () => {
               </ListItem>
             ) : (
               kbFiles.map((file, idx) => (
-                <ListItem key={idx}>
+                <ListItem key={idx} secondaryAction={
+                  <a
+                    href={`http://127.0.0.1:8000/media/documents/${encodeURIComponent(file.filename)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', color: '#1976d2' }}
+                  >
+                    <DownloadIcon fontSize="small" />
+                  </a>
+                }>
                   <ListItemIcon>
                     <InsertDriveFileIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText primary={file} />
+                  <ListItemText 
+                    primary={file.filename}
+                    secondary={`Size: ${file.file_size} bytes`}
+                  />
                 </ListItem>
               ))
             )}

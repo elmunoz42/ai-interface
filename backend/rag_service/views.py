@@ -46,18 +46,22 @@ def upload_document(request):
         # Process with the new FAISS vector store
         vector_store = get_vector_store()
         result = vector_store.add_documents([full_path])
-        
-        # Clean up temporary file
-        try:
-            if os.path.exists(full_path):
-                os.remove(full_path)
-        except Exception as e:
-            logger.warning(f"Could not remove temporary file {full_path}: {str(e)}")
-        
+
+        # Create and save Document model instance
+        doc = Document.objects.create(
+            filename=uploaded_file.name,
+            file_path=file_path,
+            file_size=uploaded_file.size,
+            content_type=uploaded_file.content_type,
+            status='completed' if result['processed_files'] else 'failed',
+            processing_error='' if result['processed_files'] else str(result)
+        )
+
         if result['processed_files']:
             return Response({
                 'message': 'Document processed successfully',
-                'result': result
+                'result': result,
+                'document': DocumentSerializer(doc).data
             }, status=status.HTTP_201_CREATED)
         else:
             return Response({
