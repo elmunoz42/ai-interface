@@ -5,6 +5,9 @@ export interface PromptRecipe {
   title: string;
   description: string;
   prompt: string;
+  modelId?: string;
+  temperature?: number;
+  maxTokens?: number;
   isEditing?: boolean;
 }
 
@@ -20,13 +23,19 @@ const initialState: PromptRecipesState = {
       title: 'Fix Grammar',
       description: 'Correct grammar and spelling errors in text',
       prompt: 'Fix the grammar and spelling in the following text: ',
+      modelId: 'llama-3-8b-instruct',
+      temperature: 0.2,
+      maxTokens: 300,
       isEditing: false
     },
     {
-      id: 'code-review',
-      title: 'Code Review',
-      description: 'Get suggestions for code improvements',
-      prompt: 'Please review this code and suggest improvements: ',
+      id: 'social-media-post',
+      title: 'Social Media Post',
+      description: 'Generate a social media post from the following content',
+      prompt: 'Create a social media post based on the following content: ',
+      modelId: 'gpt-4',
+      temperature: 0.7,
+      maxTokens: 400,
       isEditing: false
     },
     {
@@ -34,6 +43,9 @@ const initialState: PromptRecipesState = {
       title: 'Brainstorm Ideas',
       description: 'Generate creative ideas and solutions',
       prompt: 'Help me brainstorm creative ideas for: ',
+      modelId: 'gpt-4',
+      temperature: 1.0,
+      maxTokens: 500,
       isEditing: false
     },
     {
@@ -41,13 +53,19 @@ const initialState: PromptRecipesState = {
       title: 'Summarize',
       description: 'Create concise summaries of content',
       prompt: 'Please provide a concise summary of: ',
+      modelId: 'gpt-3.5-turbo',
+      temperature: 0.3,
+      maxTokens: 200,
       isEditing: false
     },
     {
-      id: 'debug-help',
-      title: 'Debug Help',
-      description: 'Get assistance with troubleshooting issues',
-      prompt: 'I\'m having trouble with this issue, can you help me debug: ',
+      id: 'info-search',
+      title: 'Information Search',
+      description: 'Get assistance with finding information',
+      prompt: 'I\'m looking for information in our knowledge base on the following topic: ',
+      modelId: 'rag-faiss',
+      temperature: 0.4,
+      maxTokens: 300,
       isEditing: false
     }
   ],
@@ -58,6 +76,24 @@ const promptRecipesSlice = createSlice({
   name: 'promptRecipes',
   initialState,
   reducers: {
+    updateRecipeModel: (state, action: PayloadAction<{ id: string; modelId: string }>) => {
+      const recipe = state.recipes.find(r => r.id === action.payload.id);
+      if (recipe) {
+        recipe.modelId = action.payload.modelId;
+      }
+    },
+    updateRecipeTemperature: (state, action: PayloadAction<{ id: string; temperature: number }>) => {
+      const recipe = state.recipes.find(r => r.id === action.payload.id);
+      if (recipe) {
+        recipe.temperature = action.payload.temperature;
+      }
+    },
+    updateRecipeMaxTokens: (state, action: PayloadAction<{ id: string; maxTokens: number }>) => {
+      const recipe = state.recipes.find(r => r.id === action.payload.id);
+      if (recipe) {
+        recipe.maxTokens = action.payload.maxTokens;
+      }
+    },
     updateRecipeTitle: (state, action: PayloadAction<{ id: string; title: string }>) => {
       const recipe = state.recipes.find(r => r.id === action.payload.id);
       if (recipe) {
@@ -93,7 +129,10 @@ const promptRecipesSlice = createSlice({
       const newRecipe: PromptRecipe = {
         ...action.payload,
         id: `custom-${Date.now()}`,
-        isEditing: false
+        isEditing: false,
+        modelId: action.payload.modelId || 'gpt-3.5-turbo',
+        temperature: action.payload.temperature ?? 0.7,
+        maxTokens: action.payload.maxTokens ?? 300
       };
       state.recipes.push(newRecipe);
     },
@@ -114,6 +153,9 @@ export const {
   updateRecipeTitle,
   updateRecipeDescription,
   updateRecipePrompt,
+  updateRecipeModel,
+  updateRecipeTemperature,
+  updateRecipeMaxTokens,
   startEditingRecipe,
   stopEditingRecipe,
   addNewRecipe,

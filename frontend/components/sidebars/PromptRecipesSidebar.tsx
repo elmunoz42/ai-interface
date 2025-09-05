@@ -30,6 +30,9 @@ import {
   updateRecipeTitle,
   updateRecipeDescription,
   updateRecipePrompt,
+  updateRecipeModel,
+  updateRecipeTemperature,
+  updateRecipeMaxTokens,
   startEditingRecipe,
   stopEditingRecipe,
   addNewRecipe,
@@ -38,8 +41,23 @@ import {
 } from '../../lib/store/promptRecipesSlice';
 
 const PromptRecipesSidebar = () => {
+  // Restore missing handler functions
+  const handleStartEdit = (recipe: PromptRecipe) => {
+    setEditingRecipe({ ...recipe });
+    setEditDialogOpen(true);
+  };
+
+  const handleStopEdit = () => {
+    setEditDialogOpen(false);
+    setEditingRecipe(null);
+  };
+
+  const handleClearChat = () => {
+    dispatch(clearMessages());
+  };
   const dispatch = useAppDispatch();
   const { recipes, editingRecipeId } = useAppSelector(state => state.promptRecipes);
+  const aiParams = useAppSelector(state => state.aiParams);
   const [newRecipe, setNewRecipe] = useState({
     title: '',
     description: '',
@@ -54,18 +72,16 @@ const PromptRecipesSidebar = () => {
     dispatch(setSelectedPromptRecipe(recipe.title));
   };
 
-  const handleClearChat = () => {
-    dispatch(clearMessages());
-  };
-
-  const handleStartEdit = (recipe: PromptRecipe) => {
-    setEditingRecipe({ ...recipe });
-    setEditDialogOpen(true);
-  };
-
-  const handleStopEdit = () => {
-    setEditDialogOpen(false);
-    setEditingRecipe(null);
+  // Save current LLM settings to the recipe being edited
+  const handleSaveCurrentLLMSettings = () => {
+    if (editingRecipe) {
+      setEditingRecipe(prev => prev ? {
+        ...prev,
+        modelId: aiParams.selectedModel.id,
+        temperature: aiParams.temperature,
+        maxTokens: aiParams.maxTokens
+      } : null);
+    }
   };
 
   const handleSaveEdit = () => {
@@ -73,10 +89,13 @@ const PromptRecipesSidebar = () => {
       dispatch(updateRecipeTitle({ id: editingRecipe.id, title: editingRecipe.title }));
       dispatch(updateRecipeDescription({ id: editingRecipe.id, description: editingRecipe.description }));
       dispatch(updateRecipePrompt({ id: editingRecipe.id, prompt: editingRecipe.prompt }));
+      dispatch(updateRecipeModel({ id: editingRecipe.id, modelId: editingRecipe.modelId || aiParams.selectedModel.id }));
+      dispatch(updateRecipeTemperature({ id: editingRecipe.id, temperature: editingRecipe.temperature ?? aiParams.temperature }));
+      dispatch(updateRecipeMaxTokens({ id: editingRecipe.id, maxTokens: editingRecipe.maxTokens ?? aiParams.maxTokens }));
     }
     setEditDialogOpen(false);
     setEditingRecipe(null);
-  };
+  }; 
 
   const handleDeleteRecipe = (id: string) => {
     dispatch(deleteRecipe(id));
@@ -341,13 +360,26 @@ const PromptRecipesSidebar = () => {
               </Typography>
             </Box>
 
+            {/* LLM Settings Section */}
+            <Box sx={{ backgroundColor: '#f8f9fa', p: 2, borderRadius: 1, border: '1px solid #e0e0e0', mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
+                Saved LLM Settings
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 0.5 }}>
+                <strong>Model:</strong> {editingRecipe?.modelId || 'Not set'}
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 0.5 }}>
+                <strong>Temperature:</strong> {editingRecipe?.temperature ?? 'Not set'}
+              </Typography>
+              <Typography variant="body2" sx={{ mb: 0.5 }}>
+                <strong>Max Tokens:</strong> {editingRecipe?.maxTokens ?? 'Not set'}
+              </Typography>
+              <Button variant="outlined" size="small" sx={{ mt: 1 }} onClick={handleSaveCurrentLLMSettings}>
+                Save Current LLM Settings
+              </Button>
+            </Box>
             {/* Preview Section */}
-            <Box sx={{ 
-              backgroundColor: '#f8f9fa', 
-              p: 2, 
-              borderRadius: 1, 
-              border: '1px solid #e0e0e0' 
-            }}>
+            <Box sx={{ backgroundColor: '#f8f9fa', p: 2, borderRadius: 1, border: '1px solid #e0e0e0' }}>
               <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
                 Preview
               </Typography>
@@ -359,11 +391,8 @@ const PromptRecipesSidebar = () => {
                   {editingRecipe.description}
                 </Typography>
               )}
-              <Typography variant="caption" color="text.secondary" sx={{ 
-                fontStyle: 'italic',
-                display: 'block'
-              }}>
-                "{editingRecipe?.prompt || 'Your prompt template will appear here...'}"
+              <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', display: 'block' }}>
+                &quot;{editingRecipe?.prompt || 'Your prompt template will appear here...'}&quot;
               </Typography>
             </Box>
           </Box>
