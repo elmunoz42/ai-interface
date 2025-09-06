@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Card, CardContent, Typography, TextField, Button, Alert, Box } from '@mui/material';
 
 const LoginForm = () => {
   const [username, setUsername] = useState('');
@@ -47,21 +48,42 @@ const LoginForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ maxWidth: 320, margin: '2rem auto', padding: 24, border: '1px solid #ccc', borderRadius: 8 }}>
-      <h2>Login</h2>
-      <div style={{ marginBottom: 12 }}>
-        <label>Username</label>
-        <input type="text" value={username} onChange={e => setUsername(e.target.value)} required style={{ width: '100%' }} />
-      </div>
-      <div style={{ marginBottom: 12 }}>
-        <label>Password</label>
-        <input type="password" value={password} onChange={e => setPassword(e.target.value)} required style={{ width: '100%' }} />
-      </div>
-      {error && <div style={{ color: 'red', marginBottom: 12 }}>{error}</div>}
-      <button type="submit" disabled={loading} style={{ width: '100%' }}>
-        {loading ? 'Logging in...' : 'Login'}
-      </button>
-    </form>
+    <Card sx={{ maxWidth: 360, margin: '2rem auto', borderRadius: 3, boxShadow: 3 }}>
+      <CardContent>
+        <Typography variant="h5" align="center" gutterBottom>Login</Typography>
+        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+          <TextField
+            label="Username"
+            value={username}
+            onChange={e => setUsername(e.target.value)}
+            required
+            fullWidth
+            margin="normal"
+            autoFocus
+          />
+          <TextField
+            label="Password"
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            fullWidth
+            margin="normal"
+          />
+          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            fullWidth
+            sx={{ mt: 3, fontWeight: 600 }}
+            disabled={loading}
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </Button>
+        </Box>
+      </CardContent>
+    </Card>
   );
 };
 
