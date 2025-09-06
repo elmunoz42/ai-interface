@@ -1,3 +1,7 @@
+# CSRF trusted origins for frontend
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+]
 """
 Django settings for ai_chat_backend project.
 

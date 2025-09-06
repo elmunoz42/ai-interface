@@ -1,3 +1,35 @@
+from django.contrib.auth import authenticate, login, logout
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from rest_framework import status
+from rest_framework.response import Response
+# Custom API login endpoint
+class LoginAPIView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request):
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        print(f"DEBUG: username={username}, password={password}")
+        user = authenticate(request, username=username, password=password)
+        print(f"DEBUG: user={user}")
+        if user is not None:
+            login(request, user)
+            print("DEBUG: Login successful")
+            return Response({'detail': 'Login successful'}, status=status.HTTP_200_OK)
+        print("DEBUG: Invalid credentials")
+        return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+# Custom API logout endpoint
+class LogoutAPIView(APIView):
+    def post(self, request):
+        logout(request)
+        return Response({'detail': 'Logged out'}, status=status.HTTP_200_OK)
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.http import JsonResponse
+# CSRF token endpoint for frontend
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    return JsonResponse({'detail': 'CSRF cookie set'})
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated

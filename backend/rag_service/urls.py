@@ -17,4 +17,7 @@ urlpatterns = [
     path('chat/', views.rag_chat, name='rag_chat'),
     path('clear/', views.clear_vector_store, name='clear_vector_store'),
     path('file/<uuid:pk>/', views.get_document_file, name='get_document_file'),
+    path('csrf/', views.get_csrf_token, name='get_csrf_token'),
+    path('auth/login/', views.LoginAPIView.as_view(), name='api_login'),
+    path('auth/logout/', views.LogoutAPIView.as_view(), name='api_logout'),
 ]
