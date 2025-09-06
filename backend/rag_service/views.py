@@ -40,6 +40,8 @@ from django.http import HttpResponse, Http404
 @permission_classes([IsAuthenticated])
 def get_document_file(request, pk):
     """Serve the contents of a document file securely"""
+    print(f"DEBUG: Session key: {request.session.session_key}")
+    print(f"DEBUG: User: {request.user} (Authenticated: {request.user.is_authenticated})")
     try:
         doc = Document.objects.get(pk=pk)
         file_path = os.path.join(settings.MEDIA_ROOT, doc.file_path)

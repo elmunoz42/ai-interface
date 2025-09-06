@@ -62,7 +62,7 @@ const AIParametersSidebar = () => {
     setModalFile(file);
     setModalLoading(true);
     try {
-      const res = await fetch(`/api/rag/file/${file.id}/`, { credentials: 'include' });
+  const res = await fetch(`http://localhost:8000/api/rag/file/${file.id}/`, { credentials: 'include' });
       if (res.ok) {
         if (file.content_type && file.content_type.startsWith('text')) {
           const text = await res.text();
@@ -81,7 +81,7 @@ const AIParametersSidebar = () => {
 
   // Download file securely
   const handleFileDownload = (file: any) => {
-    window.open(`/api/rag/file/${file.id}/`, '_blank');
+    window.open(`http://localhost:8000/api/rag/file/${file.id}/`, '_blank');
   };
   const [tabIndex, setTabIndex] = useState(0);
   const [kbFiles, setKbFiles] = useState<any[]>([]);
