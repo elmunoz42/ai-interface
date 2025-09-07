@@ -38,6 +38,21 @@ import {
 } from '../../lib/store/aiParamsSlice';
 
 const AIParametersSidebar = () => {
+  // Meeting Follow-up modal state
+  const [meetingModalOpen, setMeetingModalOpen] = useState(false);
+  const meetingModalStyle = {
+    position: 'absolute' as const,
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 700,
+    bgcolor: 'background.paper',
+    boxShadow: 24,
+    p: 4,
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    borderRadius: 2,
+  };
   // Modal state for file preview
   const [modalOpen, setModalOpen] = useState(false);
   const [modalFile, setModalFile] = useState<any | null>(null);
@@ -519,12 +534,35 @@ const AIParametersSidebar = () => {
         <Box sx={{ p: 2 }}>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
             <Box sx={{ width: '48%' }}>
-              <Button variant="outlined" sx={{ width: '100%', p: 2, flexDirection: 'column', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 120 }}>
+              <Button
+                variant="outlined"
+                sx={{ width: '100%', p: 2, flexDirection: 'column', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 120 }}
+                onClick={() => setMeetingModalOpen(true)}
+              >
                 <span style={{ fontSize: 36, marginBottom: 8 }}>📅</span>
                 <Typography variant="body2" sx={{ mt: 1 }}>Meeting Follow-up</Typography>
               </Button>
             </Box>
           </Box>
+          <Modal open={meetingModalOpen} onClose={() => setMeetingModalOpen(false)}>
+            <Box sx={meetingModalStyle}>
+              <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+                Meeting Follow-up Utility
+              </Typography>
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                  Step 1: Upload the meeting chat txt file.
+                </Typography>
+                <Button variant="contained" component="label" sx={{ minWidth: 180 }}>
+                  Upload TXT File
+                  <input type="file" accept=".txt" style={{ display: 'none' }} />
+                </Button>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
+                <Button onClick={() => setMeetingModalOpen(false)} variant="outlined">Close</Button>
+              </Box>
+            </Box>
+          </Modal>
         </Box>
       )}
     </Box>
