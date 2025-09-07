@@ -16,13 +16,11 @@ const ChatApp = () => {
   return (
     <Box sx={{ height: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', margin: 0, padding: 0 }}>
       <AppHeader />
-      
       <Box sx={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
         <AIParametersSidebar />
         <MainChatArea />
         <PromptRecipesSidebar />
       </Box>
-      
       <ErrorSnackbar />
     </Box>
   );

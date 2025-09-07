@@ -228,8 +228,9 @@ const AIParametersSidebar = () => {
       }}
     >
       <Tabs value={tabIndex} onChange={(_, v) => setTabIndex(v)} variant="fullWidth" sx={{ mb: 2 }}>
-        <Tab label="AI Params" />
-        <Tab label="KB Files" />
+        <Tab label="AI" />
+        <Tab label="KB" />
+        <Tab label="Apps" />
       </Tabs>
 
       {tabIndex === 0 && (
@@ -512,6 +513,12 @@ const AIParametersSidebar = () => {
             </Box>
           </Modal>
         </>
+      )}
+
+      {tabIndex === 2 && (
+        <Box sx={{ p: 2 }}>
+          <Typography variant="body1">Currently there are no apps.</Typography>
+        </Box>
       )}
     </Box>
   );
