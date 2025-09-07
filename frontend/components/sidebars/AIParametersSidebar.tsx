@@ -38,6 +38,10 @@ import {
 } from '../../lib/store/aiParamsSlice';
 
 const AIParametersSidebar = () => {
+  const [meetingResults, setMeetingResults] = useState<{stakeholders: string[], followups: {name: string, email: string}[]} | null>(null);
+  // Meeting Follow-up upload state
+  const [meetingUploadStatus, setMeetingUploadStatus] = useState<'idle' | 'uploading' | 'error'>('idle');
+  const [meetingUploadMessage, setMeetingUploadMessage] = useState<string>('');
   // Meeting Follow-up modal state
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
   const meetingModalStyle = {
@@ -553,10 +557,81 @@ const AIParametersSidebar = () => {
                 <Typography variant="subtitle1" sx={{ mb: 1 }}>
                   Step 1: Upload the meeting chat txt file.
                 </Typography>
-                <Button variant="contained" component="label" sx={{ minWidth: 180 }}>
-                  Upload TXT File
-                  <input type="file" accept=".txt" style={{ display: 'none' }} />
+                <Button
+                  variant="contained"
+                  component="label"
+                  sx={{ minWidth: 180 }}
+                  disabled={meetingUploadStatus === 'uploading'}
+                >
+                  {meetingUploadStatus === 'uploading' ? 'Uploading...' : 'Upload TXT File'}
+                  <input
+                    type="file"
+                    accept=".txt"
+                    style={{ display: 'none' }}
+                    disabled={meetingUploadStatus === 'uploading'}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setMeetingUploadStatus('uploading');
+                      setMeetingUploadMessage('Uploading and processing file...');
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      try {
+                        const res = await fetch('http://localhost:8000/api/rag/meeting-followup/', {
+                          method: 'POST',
+                          body: formData,
+                        });
+                        if (!res.ok) {
+                          setMeetingUploadStatus('error');
+                          setMeetingUploadMessage('Upload failed: ' + (await res.text()));
+                        } else {
+                          const data = await res.json();
+                          setMeetingUploadStatus('idle');
+                          setMeetingUploadMessage('Upload and processing complete!');
+                          setMeetingResults(data);
+                        }
+                      } catch (err) {
+                        setMeetingUploadStatus('error');
+                        setMeetingUploadMessage('Network error or server unavailable');
+                      }
+                      e.target.value = '';
+                    }}
+                  />
                 </Button>
+                {meetingUploadStatus === 'uploading' && (
+                  <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <span className="spinner" style={{ width: 24, height: 24, border: '3px solid #1976d2', borderTop: '3px solid #eee', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }} />
+                    <Typography variant="body2">{meetingUploadMessage}</Typography>
+                    <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+                  </Box>
+                )}
+                {meetingUploadStatus === 'error' && (
+                  <Alert severity="error" sx={{ mt: 2 }}>{meetingUploadMessage}</Alert>
+                )}
+                {meetingUploadStatus === 'idle' && meetingUploadMessage && (
+                  <Alert severity="success" sx={{ mt: 2 }}>{meetingUploadMessage}</Alert>
+                )}
+                {meetingResults && (
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="subtitle1" sx={{ mb: 1 }}>Stakeholders:</Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                      {meetingResults.stakeholders.map((name, idx) => (
+                        <Chip key={idx} label={name} color="primary" sx={{ fontWeight: 500 }} />
+                      ))}
+                    </Box>
+                    <Typography variant="subtitle1" sx={{ mb: 1 }}>Follow-up Emails:</Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                      {meetingResults.followups.map((f, idx) => (
+                        <Box key={idx} sx={{ width: '45%', minWidth: 220, mb: 2 }}>
+                          <Box sx={{ border: '1px solid #eee', borderRadius: 2, p: 2, bgcolor: '#fafafa' }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>{f.name}</Typography>
+                            <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{f.email}</Typography>
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                )}
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 4 }}>
                 <Button onClick={() => setMeetingModalOpen(false)} variant="outlined">Close</Button>

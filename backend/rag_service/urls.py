@@ -20,4 +20,5 @@ urlpatterns = [
     path('csrf/', views.get_csrf_token, name='get_csrf_token'),
     path('auth/login/', views.LoginAPIView.as_view(), name='api_login'),
     path('auth/logout/', views.LogoutAPIView.as_view(), name='api_logout'),
+    path('meeting-followup/', views.MeetingFollowupAPIView.as_view(), name='meeting_followup'),
 ]
