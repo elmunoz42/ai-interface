@@ -517,7 +517,14 @@ const AIParametersSidebar = () => {
 
       {tabIndex === 2 && (
         <Box sx={{ p: 2 }}>
-          <Typography variant="body1">Currently there are no apps.</Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            <Box sx={{ width: '48%' }}>
+              <Button variant="outlined" sx={{ width: '100%', p: 2, flexDirection: 'column', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 120 }}>
+                <span style={{ fontSize: 36, marginBottom: 8 }}>📅</span>
+                <Typography variant="body2" sx={{ mt: 1 }}>Meeting Follow-up</Typography>
+              </Button>
+            </Box>
+          </Box>
         </Box>
       )}
     </Box>
