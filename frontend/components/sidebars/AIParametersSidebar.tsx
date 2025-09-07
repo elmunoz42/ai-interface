@@ -38,6 +38,8 @@ import {
 } from '../../lib/store/aiParamsSlice';
 
 const AIParametersSidebar = () => {
+  const [presentersInput, setPresentersInput] = useState('');
+  const [presenters, setPresenters] = useState<string[]>([]);
   const [meetingResults, setMeetingResults] = useState<{stakeholders: string[], followups: {name: string, email: string}[]} | null>(null);
   // Meeting Follow-up upload state
   const [meetingUploadStatus, setMeetingUploadStatus] = useState<'idle' | 'uploading' | 'error'>('idle');
@@ -555,7 +557,18 @@ const AIParametersSidebar = () => {
               </Typography>
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                  Step 1: Upload the meeting chat txt file.
+                  Step 1: Enter full names of the presenter(s) (separate w/ commas)
+                </Typography>
+                <TextField
+                  label="Presenters"
+                  placeholder="e.g. Jane Doe, John Smith"
+                  value={presentersInput}
+                  onChange={e => setPresentersInput(e.target.value)}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                  Step 2: Upload the meeting chat txt file.
                 </Typography>
                 <Button
                   variant="contained"
@@ -586,9 +599,18 @@ const AIParametersSidebar = () => {
                           setMeetingUploadMessage('Upload failed: ' + (await res.text()));
                         } else {
                           const data = await res.json();
+                          // Parse presenters from input
+                          const enteredPresenters = presentersInput.split(',').map(s => s.trim()).filter(Boolean);
+                          setPresenters(enteredPresenters);
+                          // Filter out presenters from stakeholders and followups
+                          const filteredStakeholders = data.stakeholders.filter((name: string) => !enteredPresenters.includes(name));
+                          const filteredFollowups = data.followups.filter((f: {name: string}) => !enteredPresenters.includes(f.name));
                           setMeetingUploadStatus('idle');
                           setMeetingUploadMessage('Upload and processing complete!');
-                          setMeetingResults(data);
+                          setMeetingResults({
+                            stakeholders: filteredStakeholders,
+                            followups: filteredFollowups
+                          });
                         }
                       } catch (err) {
                         setMeetingUploadStatus('error');
@@ -613,6 +635,16 @@ const AIParametersSidebar = () => {
                 )}
                 {meetingResults && (
                   <Box sx={{ mt: 3 }}>
+                    {presenters.length > 0 && (
+                      <>
+                        <Typography variant="subtitle1" sx={{ mb: 1 }}>Presenters:</Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                          {presenters.map((name, idx) => (
+                            <Chip key={idx} label={name} color="secondary" sx={{ fontWeight: 500 }} />
+                          ))}
+                        </Box>
+                      </>
+                    )}
                     <Typography variant="subtitle1" sx={{ mb: 1 }}>Stakeholders:</Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
                       {meetingResults.stakeholders.map((name, idx) => (
@@ -621,14 +653,26 @@ const AIParametersSidebar = () => {
                     </Box>
                     <Typography variant="subtitle1" sx={{ mb: 1 }}>Follow-up Emails:</Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                      {meetingResults.followups.map((f, idx) => (
-                        <Box key={idx} sx={{ width: '45%', minWidth: 220, mb: 2 }}>
-                          <Box sx={{ border: '1px solid #eee', borderRadius: 2, p: 2, bgcolor: '#fafafa' }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>{f.name}</Typography>
-                            <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{f.email}</Typography>
+                      {meetingResults.followups.map((f, idx) => {
+                        // Encode email body for mailto
+                        const mailtoBody = encodeURIComponent(f.email);
+                        const mailtoSubject = encodeURIComponent('Follow-Up on Innergy ERP Inquiry');
+                        return (
+                          <Box key={idx} sx={{ width: '45%', minWidth: 220, mb: 2 }}>
+                            <a
+                              href={`mailto:?subject=${mailtoSubject}&body=${mailtoBody}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              style={{ textDecoration: 'none' }}
+                            >
+                              <Box sx={{ border: '1px solid #eee', borderRadius: 2, p: 2, bgcolor: '#fafafa', cursor: 'pointer', '&:hover': { boxShadow: 2, backgroundColor: '#f5f5f5' } }}>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>{f.name}</Typography>
+                                <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{f.email}</Typography>
+                              </Box>
+                            </a>
                           </Box>
-                        </Box>
-                      ))}
+                        );
+                      })}
                     </Box>
                   </Box>
                 )}
