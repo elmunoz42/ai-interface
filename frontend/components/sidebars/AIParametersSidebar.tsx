@@ -483,9 +483,6 @@ const AIParametersSidebar = () => {
                     </IconButton>
                   </>
                 }>
-                  <ListItemIcon>
-                    <InsertDriveFileIcon fontSize="small" />
-                  </ListItemIcon>
                   <ListItemText 
                     primary={file.filename}
                     secondary={`Size: ${file.file_size} bytes`}
