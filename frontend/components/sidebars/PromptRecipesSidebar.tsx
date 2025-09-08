@@ -76,6 +76,11 @@ const PromptRecipesSidebar = () => {
       const model = aiParams.availableModels.find(m => m.id === recipe.modelId);
       if (model) {
         dispatch(setSelectedModel(model));
+        setTimeout(() => {
+          const state = window.__REDUX_DEVTOOLS_EXTENSION__?.getState?.() || {};
+          // Fallback: log from aiParams
+          console.log('Selected model after recipe:', model);
+        }, 100);
       }
     }
     if (typeof recipe.temperature === 'number') {
