@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import IconButton from '@mui/material/IconButton';
 import { Paper, List, ListItem, ListItemText, Box, Typography } from '@mui/material';
 import { useAppSelector } from '../../lib/store/hooks';
 
@@ -29,7 +31,7 @@ const MessagesList = () => {
     >
       <List>
         {messages.map((msg, index) => (
-          <ListItem key={index} alignItems="flex-start">
+          <ListItem key={index} alignItems="flex-start" sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
             <ListItemText
               primary={
                 <Box>
@@ -63,6 +65,19 @@ const MessagesList = () => {
                       />
                     )}
                   </Typography>
+                  {/* Copy button for AI answers (support both 'assistant' and 'ai' roles) */}
+                  {(msg.role === 'assistant' || msg.role === 'ai') && (
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', mt: 0.25 }}>
+                      <IconButton
+                        size="small"
+                        aria-label="Copy message"
+                        sx={{ m: 0 }}
+                        onClick={() => navigator.clipboard.writeText(msg.text)}
+                      >
+                        <ContentCopyIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  )}
                 </Box>
               }
               secondary={msg.role === 'user' ? 'You' : msg.role === 'system' ? 'System' : 'AI Assistant'}

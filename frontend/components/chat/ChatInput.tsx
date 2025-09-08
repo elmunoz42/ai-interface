@@ -75,7 +75,7 @@ const ChatInput = () => {
         label="Type your message"
         variant="outlined"
         multiline
-        rows={2}
+        rows={4}
         fullWidth
         value={inputText}
         onChange={(e) => handleInputChange(e.target.value)}
