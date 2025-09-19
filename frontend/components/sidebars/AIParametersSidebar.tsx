@@ -1,4 +1,15 @@
 'use client';
+// Utility to get CSRF token from cookies
+const getCSRFToken = () => {
+  const name = 'csrftoken';
+  const cookies = document.cookie.split(';');
+  for (let cookie of cookies) {
+    const [key, value] = cookie.trim().split('=');
+    if (key === name) return value;
+  }
+  return '';
+};
+// ...existing code...
 
 import React, { useState, useEffect } from 'react';
 import Modal from '@mui/material/Modal';
@@ -140,11 +151,16 @@ const AIParametersSidebar = () => {
       const res = await fetch(`http://localhost:8000/api/rag/file/${file.id}/`, {
         method: 'DELETE',
         credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'X-CSRFToken': getCSRFToken(),
+        },
       });
       if (res.ok) {
         setKbFiles(prev => prev.filter(f => f.id !== file.id));
       } else {
-        alert('Failed to delete file.');
+        const error = await res.json().catch(() => ({}));
+        alert('Failed to delete file.' + (error.detail ? `\n${error.detail}` : ''));
       }
     } catch (e) {
       alert('Error deleting file.');

@@ -55,25 +55,30 @@ def get_document_file(request, pk):
                 response['Content-Disposition'] = f'inline; filename="{doc.filename}"'
                 return response
         elif request.method == 'DELETE':
-            # Delete all files in media/documents/ matching the base filename (with or without suffixes)
-            try:
-                documents_dir = os.path.join(settings.MEDIA_ROOT, 'documents')
-                base_name, ext = os.path.splitext(doc.filename)
-                deleted_files = []
-                for fname in os.listdir(documents_dir):
-                    # Match files with same base name and extension, including suffixes
-                    if fname.startswith(base_name) and fname.endswith(ext):
-                        fpath = os.path.join(documents_dir, fname)
+            documents_dir = os.path.join(settings.MEDIA_ROOT, 'documents')
+            base_name, ext = os.path.splitext(doc.filename)
+            deleted_files = []
+            errors = []
+            # Try to delete all matching files
+            for fname in os.listdir(documents_dir):
+                if fname.startswith(base_name) and fname.endswith(ext):
+                    fpath = os.path.join(documents_dir, fname)
+                    try:
                         if os.path.exists(fpath):
                             os.remove(fpath)
                             deleted_files.append(fname)
-            except Exception as cleanup_err:
-                # Log but don't block deletion
-                logger.error(f"Error cleaning up related files: {cleanup_err}")
+                    except Exception as file_err:
+                        errors.append(f"{fname}: {str(file_err)}")
             # Delete Document object
-            doc.delete()
+            try:
+                doc.delete()
+            except Exception as db_err:
+                errors.append(f"DB error: {str(db_err)}")
             # Optionally: remove document chunks and update vector store here
-            return Response({'detail': f'File(s) deleted: {deleted_files}'}, status=204)
+            if errors:
+                return Response({'detail': f'File(s) deleted: {deleted_files}', 'errors': errors}, status=500)
+            else:
+                return Response({'detail': f'File(s) deleted: {deleted_files}'}, status=200)
     except Document.DoesNotExist:
         return Response({'detail': 'Document not found.'}, status=404)
     except Exception as e:
