@@ -107,21 +107,49 @@ const AIParametersSidebar = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const [kbFiles, setKbFiles] = useState<any[]>([]);
   // Fetch knowledge base files when Knowledge Base tab is selected
+  const fetchKbFiles = () => {
+    fetch('http://127.0.0.1:8000/api/rag/documents/')
+      .then(res => res.json())
+      .then(data => {
+        // DRF paginated response: { count, next, previous, results }
+        if (Array.isArray(data.results)) {
+          setKbFiles(data.results);
+        } else {
+          setKbFiles([]);
+        }
+      })
+      .catch(() => setKbFiles([]));
+  };
   useEffect(() => {
     if (tabIndex === 1) {
-      fetch('http://127.0.0.1:8000/api/rag/documents/')
-        .then(res => res.json())
-        .then(data => {
-          // DRF paginated response: { count, next, previous, results }
-          if (Array.isArray(data.results)) {
-            setKbFiles(data.results);
-          } else {
-            setKbFiles([]);
-          }
-        })
-        .catch(() => setKbFiles([]));
+      fetchKbFiles();
     }
   }, [tabIndex]);
+
+  // Log KB files to console for UUID access
+  useEffect(() => {
+    if (tabIndex === 1 && kbFiles.length > 0) {
+      console.log('KB Files:', kbFiles);
+    }
+  }, [tabIndex, kbFiles]);
+
+  // Delete KB file handler
+  const handleFileDelete = async (file: any) => {
+    if (!window.confirm(`Delete "${file.filename}" from knowledge base? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`http://localhost:8000/api/rag/file/${file.id}/`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (res.ok) {
+        setKbFiles(prev => prev.filter(f => f.id !== file.id));
+      } else {
+        alert('Failed to delete file.');
+      }
+    } catch (e) {
+      alert('Error deleting file.');
+    }
+  };
   const dispatch = useAppDispatch();
   const { 
     temperature, 
@@ -502,6 +530,10 @@ const AIParametersSidebar = () => {
                     </IconButton>
                     <IconButton onClick={() => handleFileDownload(file)}>
                       <DownloadIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton onClick={() => handleFileDelete(file)} aria-label="Delete" sx={{ color: '#d32f2f' }}>
+                      {/* Simple trash icon using SVG for minimal dependency */}
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d32f2f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m5 0V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                     </IconButton>
                   </>
                 }>

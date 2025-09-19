@@ -12,49 +12,16 @@ from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import HumanMessage
 
-# Company context for Innergy
-INNERGY_ABOUT = '''
-We’re a new take on Woodworking ERP
-From our modern cloud-based software to our focus on education and community, INNERGY is different because of our people and our DNA.
 
-For woodworkers, by woodworkers
-We’ve lived the complexity of scheduling and delivery.
-Experienced
-We’ve experienced the chaos of no standardization. And we fully appreciate that things are stuck in engineering.
-
-Focus
-That’s why we focus not just on building amazing software, but on successful implementations, as well as ongoing education that supports you and your business.
-
-Our People
-We’re building the best team around.
-With hundreds of years of combined woodworking expertise, we leverage our team’s extensive experience to help our customers grow.
-
-Our Process
-Adopting new tech, particularly core ERP, is a challenge that we meet head-on with every business that we partner with.
-
-We support implementation start to finish
-We help you customize our software to your operations
-We provide on-going education at no extra cost
-Our Values
-We are driven by our values and committed to your success.
-
-Voice of the Customer
-It all starts and ends with the customer. We want to change how people work and thrive within their industry.
-
-Education
-INNERGY is more than just software. We listen, learn, and teach. We’re an educational leader in the industry.
-
-Agile as Hell
-We all make mistakes and are committed to fast improvement over delayed perfection. We are ready for change and push forward, try new things and find new solutions.
-
-Transparency
-Great companies are created by sharing knowledge. We practice honest, vulnerable communication and we build trust and equity with our customers.
-
-Problem / Solution
-We always run towards the problem and tackle it head on, and our team is passionate about finding solutions to the problems woodworkers face. 
-
-Quality
-Our clients rely on us and we are proud of what we do at the end of the day. We deliver as if we are the recipient.
+# County of Santa Barbara Zero Emission Vehicle Plan context
+ZEV_PLAN_CONTEXT = '''
+County of Santa Barbara Zero-Emission Vehicle Plan (ZEVP)
+2030 Climate Action Plan (CAP) aims to reduce community-wide emissions 50% by 2030 (below 2018 levels).
+On-road vehicle transportation accounts for 48% of the County’s GHG emissions. As of 2022, ZEVs make up less than 2% of all vehicles on the road in Santa Barbara County.
+The ZEV Plan supports the transition to zero-emission transportation and increases access to clean mobility options. It identifies gaps, barriers, and challenges to planning, education, and infrastructure deployment, and develops strategies to meet internal county operations and community needs.
+The plan also identifies opportunities to increase equitable adoption of clean transportation modes including electric vehicles (EVs), electrified transit, micro-mobility and shared mobility devices and services, and emerging technologies.
+Action categories include Planning and Policy, Infrastructure Deployment, Programmatic Actions, and Outreach, Education, & Engagement.
+Example actions: require charging infrastructure in new buildings, conduct mobility needs assessments, create EV charging station manuals, install EV stations, expand shared mobility pilots, workplace charging programs, pilot fleet electrification, battery recycling, and equitable workforce development.
 '''
 
 class MeetingFollowupAPIView(APIView):
@@ -71,7 +38,7 @@ class MeetingFollowupAPIView(APIView):
         chat_text = uploaded_file.read().decode('utf-8')
         # Step 2: Extract stakeholder names
         stakeholder_prompt = f"""
-        Extract all the names of stakeholders mentioned in the following Zoom meeting chat transcript. Only return a Python list of names, no explanation.
+        Extract all the names of stakeholders mentioned in the following meeting chat transcript about the County of Santa Barbara Zero Emission Vehicle Plan and related activities. Only return a Python list of names, no explanation.
         Transcript:
         {chat_text}
         """
@@ -79,7 +46,6 @@ class MeetingFollowupAPIView(APIView):
         stakeholder_names = []
         try:
             response = llm([HumanMessage(content=stakeholder_prompt)])
-            # Try to parse names from response
             import ast
             stakeholder_names = ast.literal_eval(response.content)
         except Exception as e:
@@ -88,11 +54,11 @@ class MeetingFollowupAPIView(APIView):
         followups = []
         for name in stakeholder_names:
             followup_prompt = f"""
-            You are a sales rep for Innergy, a modern cloud-based ERP for woodworkers. Based on the transcript below and the company context, write a very short follow-up email for {name} summarizing what they asked about and how Innergy can help. Be concise and friendly.
+            You are a sustainability and clean transportation specialist for Santa Barbara County. Based on the transcript below and the county context, write a very short follow-up email for {name} summarizing what they asked about and how the County's Zero Emission Vehicle Plan and related programs can help. Be concise, friendly, and reference relevant ZEV plan actions if possible.
             Transcript:
             {chat_text}
-            Company context:
-            {INNERGY_ABOUT}
+            County context:
+            {ZEV_PLAN_CONTEXT}
             """
             try:
                 followup_response = llm([HumanMessage(content=followup_prompt)])

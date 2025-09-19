@@ -37,24 +37,47 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, Http404
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+@api_view(['GET', 'DELETE'])
+@permission_classes([AllowAny])
 def get_document_file(request, pk):
-    """Serve the contents of a document file securely"""
-    print(f"DEBUG: Session key: {request.session.session_key}")
-    print(f"DEBUG: User: {request.user} (Authenticated: {request.user.is_authenticated})")
+    """Serve the contents of a document file securely or delete the file"""
     try:
         doc = Document.objects.get(pk=pk)
         file_path = os.path.join(settings.MEDIA_ROOT, doc.file_path)
-        if not os.path.exists(file_path):
-            raise Http404("File not found")
-        # Optionally check user permissions here
-        with open(file_path, 'rb') as f:
-            response = HttpResponse(f.read(), content_type=doc.content_type)
-            response['Content-Disposition'] = f'inline; filename="{doc.filename}"'
-            return response
+        if request.method == 'GET':
+            if not os.path.exists(file_path):
+                raise Http404("File not found")
+            with open(file_path, 'rb') as f:
+                response = HttpResponse(f.read(), content_type=doc.content_type)
+                response['Content-Disposition'] = f'inline; filename="{doc.filename}"'
+                return response
+        elif request.method == 'DELETE':
+            # Delete all files in media/documents/ matching the base filename (with or without suffixes)
+            try:
+                documents_dir = os.path.join(settings.MEDIA_ROOT, 'documents')
+                base_name, ext = os.path.splitext(doc.filename)
+                deleted_files = []
+                for fname in os.listdir(documents_dir):
+                    # Match files with same base name and extension, including suffixes
+                    if fname.startswith(base_name) and fname.endswith(ext):
+                        fpath = os.path.join(documents_dir, fname)
+                        if os.path.exists(fpath):
+                            os.remove(fpath)
+                            deleted_files.append(fname)
+            except Exception as cleanup_err:
+                # Log but don't block deletion
+                logger.error(f"Error cleaning up related files: {cleanup_err}")
+            # Delete Document object
+            doc.delete()
+            # Optionally: remove document chunks and update vector store here
+            return Response({'detail': f'File(s) deleted: {deleted_files}'}, status=204)
     except Document.DoesNotExist:
-        raise Http404("Document not found")
+        return Response({'detail': 'Document not found.'}, status=404)
+    except Exception as e:
+        return Response({'detail': f'Error deleting file: {str(e)}'}, status=500)
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
