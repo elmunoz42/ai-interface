@@ -1,0 +1,528 @@
+# .cursorrules - Full Stack Development Rules
+
+## General Development Principles
+
+- Write clean, readable, and maintainable code
+- Follow DRY (Don't Repeat Yourself) principles
+- Use meaningful variable and function names
+- Include comprehensive error handling
+- Write tests for critical functionality
+- Follow security best practices
+- Use TypeScript for type safety where applicable
+- Implement proper logging and monitoring
+
+## Next.js & Frontend Best Practices
+
+### Project Structure
+
+- Use the App Router (`frontend/app/`) for all new UI features
+- Organize React components in `frontend/components/` by domain or feature (e.g., `components/sidebars/`, `components/chat/`)
+- Place Redux slices and store logic in `frontend/lib/store/`
+- Use `frontend/lib/` for utility functions, API clients, and configuration
+- Keep `frontend/public/` for static assets (images, icons, etc.)
+- Use `frontend/types/` for TypeScript type definitions
+- Place global styles in `frontend/app/globals.css`
+- Use `frontend/pages/` only for legacy or special routing needs
+
+### Performance & Optimization
+
+- Use Next.js `<Image />` for optimized images
+- Implement caching and ISR with `revalidate` where possible
+- Use dynamic imports for code splitting and to reduce bundle size
+- Use the metadata API for SEO and social sharing
+- Use `"use client"` directive only when necessary for client components
+- Prefer Server Components by default for data fetching and rendering
+- Minimize prop drilling by using context or Redux where appropriate
+
+### Code Style
+
+- Use function components with TypeScript for all React code
+- Prefer named exports for components and utilities
+- Use consistent file naming: `PascalCase` for components, `camelCase` for hooks and utilities
+- Use Prettier and ESLint for formatting and linting
+- Write JSDoc or TypeScript doc comments for complex functions
+
+## Material-UI (MUI) Implementation
+
+### Component Usage
+
+- Use Material-UI (MUI) v5+ with emotion styling
+- Follow Material Design 3 principles
+- Use consistent spacing (8px grid system)
+- Implement proper elevation and shadows
+- Use Material Icons or Material Symbols
+- Use MUI's theme provider in `frontend/app/layout.tsx` for consistent theming
+
+### Theming
+
+```typescript
+// Create consistent theme
+import { createTheme } from "@mui/material/styles";
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#1976d2",
+    },
+    secondary: {
+      main: "#dc004e",
+    },
+  },
+  typography: {
+    fontFamily: "Roboto, Arial, sans-serif",
+  },
+});
+```
+
+### Accessibility
+
+- Include proper ARIA labels
+- Ensure color contrast meets WCAG standards
+- Implement keyboard navigation
+- Use semantic HTML elements
+
+## FAISS & RAG Integration (Backend)
+
+### Vector Operations
+
+- Use faiss-cpu for development, faiss-gpu for production
+- Implement proper index serialization/deserialization
+- Use appropriate index types (IndexFlatL2, IndexIVFFlat, etc.)
+- Handle batch operations efficiently
+
+### Memory Management
+
+```python
+import faiss
+import numpy as np
+
+# Proper FAISS index creation
+def create_faiss_index(dimension: int, index_type: str = "flat"):
+    if index_type == "flat":
+        return faiss.IndexFlatL2(dimension)
+    elif index_type == "ivf":
+        quantizer = faiss.IndexFlatL2(dimension)
+        return faiss.IndexIVFFlat(quantizer, dimension, 100)
+
+# Always normalize vectors before indexing
+def normalize_vectors(vectors: np.ndarray) -> np.ndarray:
+    return vectors / np.linalg.norm(vectors, axis=1, keepdims=True)
+```
+
+## Redux Toolkit Best Practices
+
+### Store Structure
+
+- Use Redux Toolkit (RTK) for modern Redux
+- Organize slices by feature/domain
+- Use createAsyncThunk for async operations
+- Implement proper error handling
+
+### Slice Creation
+
+```typescript
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+
+// Async thunk example
+export const fetchData = createAsyncThunk(
+  "feature/fetchData",
+  async (params: FetchParams, { rejectWithValue }) => {
+    try {
+      const response = await api.fetchData(params);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+const featureSlice = createSlice({
+  name: "feature",
+  initialState,
+  reducers: {
+    // Synchronous actions
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchData.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchData.fulfilled, (state, action) => {
+        state.loading = false;
+        state.data = action.payload;
+      })
+      .addCase(fetchData.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+  },
+});
+```
+
+## GraphQL Best Practices
+
+### Schema Design
+
+- Use descriptive type and field names
+- Implement proper pagination with cursor-based approach
+- Use unions and interfaces appropriately
+- Include proper error handling
+
+### Query Optimization
+
+```graphql
+# Use fragments for reusable field sets
+fragment UserInfo on User {
+  id
+  name
+  email
+  avatar
+}
+
+# Implement proper pagination
+query GetUsers($first: Int!, $after: String) {
+  users(first: $first, after: $after) {
+    edges {
+      node {
+        ...UserInfo
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+```
+
+### Client-Side (Apollo/Relay)
+
+- Use proper caching strategies
+- Implement optimistic updates
+- Handle loading and error states
+- Use subscriptions for real-time data
+
+## Django Backend Best Practices
+
+### Project Structure
+
+```
+backend/
+├── ai_chat_backend/         # Django project root
+│   ├── settings.py
+│   ├── urls.py
+│   └── ...
+├── chat_api/               # Django app for chat features
+├── document_store/         # Django app for document/KB management
+├── rag_service/            # Django app for RAG/FAISS logic
+├── model_cache/            # Model files and cache
+├── requirements.txt
+└── manage.py
+```
+
+### Models
+
+```python
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+
+class BaseModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+class User(AbstractUser, BaseModel):
+    email = models.EmailField(unique=True)
+
+    class Meta:
+        db_table = 'users'
+        indexes = [
+            models.Index(fields=['email']),
+        ]
+```
+
+### Views & Serializers
+
+- Use Django REST Framework for APIs
+- Implement proper permissions and authentication
+- Use ViewSets for CRUD operations
+- Validate data properly with serializers
+
+### Security
+
+- Use environment variables for secrets
+- Implement proper CORS settings
+- Use HTTPS in production
+- Implement rate limiting
+- Sanitize user input
+
+## Python Best Practices
+
+### Code Style
+
+- Follow PEP 8 style guide
+- Use type hints for better code documentation
+- Implement proper exception handling
+- Use virtual environments
+
+```python
+from typing import List, Optional, Dict, Any
+import logging
+
+logger = logging.getLogger(__name__)
+
+def process_data(
+    data: List[Dict[str, Any]],
+    filters: Optional[Dict[str, Any]] = None
+) -> List[Dict[str, Any]]:
+    """
+    Process data with optional filters.
+
+    Args:
+        data: List of data dictionaries
+        filters: Optional filtering criteria
+
+    Returns:
+        Processed data list
+
+    Raises:
+        ValueError: If data format is invalid
+    """
+    try:
+        if not data:
+            return []
+
+        processed = []
+        for item in data:
+            if filters and not _matches_filters(item, filters):
+                continue
+            processed.append(_process_item(item))
+
+        return processed
+    except Exception as e:
+        logger.error(f"Error processing data: {e}")
+        raise
+```
+
+### Performance
+
+- Use list comprehensions appropriately
+- Implement caching where beneficial
+- Use generators for large datasets
+- Profile code for bottlenecks
+
+## Terraform & Infrastructure Best Practices
+
+### File Structure
+
+- Place root-level infrastructure files in `/terraform-ec2.tf` for simple deployments
+- For larger projects, use a `terraform/` directory with modules and environment folders
+
+### Code Organization
+
+```hcl
+# variables.tf
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  validation {
+    condition     = contains(["dev", "staging", "prod"], var.environment)
+    error_message = "Environment must be dev, staging, or prod."
+  }
+}
+
+# Use locals for computed values
+locals {
+  common_tags = {
+    Environment = var.environment
+    Project     = var.project_name
+    ManagedBy   = "terraform"
+  }
+}
+
+# Resource naming convention
+resource "aws_instance" "web" {
+  ami           = var.ami_id
+  instance_type = var.instance_type
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_name}-${var.environment}-web"
+  })
+}
+```
+
+### Security
+
+- Use remote state with encryption
+- Implement proper IAM policies
+- Store secrets in AWS Secrets Manager
+- Use least privilege principle
+
+## AWS & Cloud Best Practices
+
+### General Principles
+
+- Use Well-Architected Framework principles
+- Implement multi-AZ deployments for high availability
+- Use AWS Config for compliance monitoring
+- Implement proper backup strategies
+
+### Security
+
+```hcl
+# S3 bucket security
+resource "aws_s3_bucket" "app_bucket" {
+  bucket = "${var.project_name}-${var.environment}-bucket"
+}
+
+resource "aws_s3_bucket_versioning" "app_bucket" {
+  bucket = aws_s3_bucket.app_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_encryption" "app_bucket" {
+  bucket = aws_s3_bucket.app_bucket.id
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "app_bucket" {
+  bucket = aws_s3_bucket.app_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+```
+
+### Monitoring & Logging
+
+- Use CloudWatch for monitoring
+- Implement structured logging
+- Set up alerts for critical metrics
+- Use AWS X-Ray for tracing
+
+### Cost Optimization
+
+- Use appropriate instance types
+- Implement auto-scaling
+- Use Spot instances for non-critical workloads
+- Regular cost reviews and optimization
+
+## Environment & Deployment Configuration
+
+### Environment Variables
+
+- Store all secrets and environment variables in `.env.local` (frontend) and `.env` (backend)
+- Never commit secrets to version control
+- Example:
+  ```bash
+  # .env.local (Next.js)
+  NEXT_PUBLIC_API_URL=http://localhost:8000/api
+  # .env (Django)
+  DJANGO_SECRET_KEY=your-secret-key
+  DATABASE_URL=sqlite:///db.sqlite3
+  AWS_REGION=us-east-1
+  ```
+
+### Docker & Containerization
+
+```dockerfile
+# Multi-stage build for Next.js
+FROM node:18-alpine AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY . .
+COPY --from=deps /app/node_modules ./node_modules
+RUN npm run build
+
+FROM node:18-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV production
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+## Testing & Quality Guidelines
+
+### Frontend Testing (Jest + Testing Library)
+
+```typescript
+import { render, screen } from "@testing-library/react";
+import { Provider } from "react-redux";
+import { store } from "../store";
+import Component from "./Component";
+
+test("renders component correctly", () => {
+  render(
+    <Provider store={store}>
+      <Component />
+    </Provider>
+  );
+
+  expect(screen.getByText("Expected text")).toBeInTheDocument();
+});
+```
+
+### Backend Testing (Django REST Framework)
+
+```python
+from django.test import TestCase
+from rest_framework.test import APITestCase
+from rest_framework import status
+
+class UserAPITestCase(APITestCase):
+    def setUp(self):
+        self.user_data = {
+            'email': 'test@example.com',
+            'password': 'testpass123'
+        }
+
+    def test_create_user(self):
+        response = self.client.post('/api/users/', self.user_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+```
+
+## Documentation & Code Standards
+
+### Code Comments
+
+- Write self-documenting code with clear variable names
+- Add comments for complex business logic
+- Document API endpoints with proper schemas
+- Include README files for each module
+
+### API Documentation
+
+- Use OpenAPI/Swagger for REST APIs
+- Document GraphQL schema with descriptions
+- Include example requests and responses
+- Maintain up-to-date documentation
+
+## Additional Best Practices
+
+- Use Git branches and pull requests for all new features and bugfixes
+- Write clear, descriptive commit messages
+- Regularly update dependencies and monitor for security vulnerabilities
+- Use pre-commit hooks for linting and formatting
+- Document all API endpoints and data models
+- Review and refactor code for maintainability
