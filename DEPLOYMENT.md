@@ -99,7 +99,10 @@ To enable the free/fast Llama 3 8B path, deploy `llama-endpoint.js` as a Cloudfl
      -H "content-type: application/json" \
      -d '{"prompt":"Say hello from Llama 3"}'
 
-### Note on Costs: (Free unless high usage)
+### Note on Costs: 
+
+*TL;DR: Free unless high usage*
+
 "Workers AI is included in both the Free and Paid Workers plans and is priced at $0.011 per 1,000 Neurons.
 
 Our free allocation allows anyone to use a total of 10,000 Neurons per day at no charge. To use more than 10,000 Neurons per day, you need to sign up for the Workers Paid plan. On Workers Paid, you will be charged at $0.011 / 1,000 Neurons for any usage above the free allocation of 10,000 Neurons per day."
