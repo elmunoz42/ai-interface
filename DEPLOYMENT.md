@@ -1,7 +1,11 @@
 # AWS 2-AZ Three-Tier Web Architecture Deployment (BETA)
 
+## Disclaimer
+
+This architecture is still undergoing testing and fine tuning..
+
 ## Overview
-This production-ready three-tier architecture is designed for **high availability**, **scalability**, and **resilience**.  
+This production-grade three-tier architecture is designed for **high availability**, **scalability**, and **resilience**.  
 It spans **two Availability Zones (AZs)** within a single AWS Region and builds on the initial proof-of-concept (POC) by adding redundancy, load balancing, auto scaling, and monitoring.
 
 The application stack itself is composed of:
