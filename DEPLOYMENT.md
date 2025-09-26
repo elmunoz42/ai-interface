@@ -4,6 +4,10 @@
 This production-ready three-tier architecture is designed for **high availability**, **scalability**, and **resilience**.  
 It spans **two Availability Zones (AZs)** within a single AWS Region and builds on the initial proof-of-concept (POC) by adding redundancy, load balancing, auto scaling, and monitoring.
 
+---
+
+## Architecture Diagram (Conceptual)
+
 <img width="843" height="465" alt="image" src="https://github.com/user-attachments/assets/cb11dd53-28ce-463b-93e3-6d8a900a60c4" />
 
 ---
@@ -64,7 +68,5 @@ It spans **two Availability Zones (AZs)** within a single AWS Region and builds 
 - **RDS Read Replica**: Ensures database resilience and disaster recovery readiness.
 - **CloudWatch Alarms**: Provide real-time monitoring and alerting.
 
----
 
-## Architecture Diagram (Conceptual)
 
