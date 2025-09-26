@@ -1,4 +1,4 @@
-# AWS 2-AZ Three-Tier Web Architecture Deployment
+# AWS 2-AZ Three-Tier Web Architecture Deployment (BETA)
 
 ## Overview
 This production-ready three-tier architecture is designed for **high availability**, **scalability**, and **resilience**.  
