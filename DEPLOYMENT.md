@@ -15,7 +15,7 @@ The application stack itself is composed of:
   - **Postgres (RDS):** Transactional database for Django models, users, and chat history.
   - **FAISS Vector Store:** In-memory semantic search index (for RAG), running **inside the Django application servers**.  
     This is separate from Postgres and optimized for vector similarity search.
-- **LLM Endpoint:** Cloudflare worker hosting Llama 3 8 billion parameter model
+- **LLM Endpoint:** Cloudflare worker hosting Llama 3 8 billion parameter model. (Cost is virtually zero)
 
 ---
 
