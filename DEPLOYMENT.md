@@ -82,6 +82,23 @@ Both are required for the full chat + RAG functionality.
     - Resource usage metrics (CPU, memory, scaling activity)
   - Enables proactive scaling and rapid incident response.
 
+## BONUS: Cloudflare Workers AI (Llama Endpoint)
+
+To enable the free/fast Llama 3 8B path, deploy `llama-endpoint.js` as a Cloudflare Worker and expose it as the model endpoint the frontend calls. The Worker uses **Workers AI** with the model **@cf/meta/llama-3-8b-instruct** and returns streaming JSON suitable for the Next.js client.
+
+### Quick Steps (Dashboard)
+1. **Enable Workers AI** in your Cloudflare account (Account Home → Workers AI → Enable).
+2. **Create a Worker** (Workers & Pages → Create application → Worker → “Import” / “Edit code”) and **paste the contents of `llama-endpoint.js`**.
+3. **Add the AI binding**: Worker → Settings → **Bindings** → **Add binding** → *AI* → name it `AI` (or update the code to match your binding name).
+4. **Set CORS / Allowed Origins** (if your Worker sets headers): add your frontend origin(s) (e.g., `https://yourdomain.com`, `http://localhost:3000`).
+5. **Deploy** the Worker and **copy the Worker URL** (e.g., `https://llama-endpoint.your-account.workers.dev`).
+6. **Frontend config**: set `NEXT_PUBLIC_LLAMMA_ENDPOINT` (or your chosen env var) to the Worker URL so the model selector can call it.
+7. **Test**:
+   ```bash
+   curl -X POST "https://llama-endpoint.your-account.workers.dev" \
+     -H "content-type: application/json" \
+     -d '{"prompt":"Say hello from Llama 3"}'
+
 ---
 
 ## High Availability and Resilience Features
