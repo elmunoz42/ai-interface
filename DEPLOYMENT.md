@@ -2,7 +2,7 @@
 
 ## Disclaimer
 
-This architecture is still undergoing testing and fine tuning..
+This architecture is still undergoing testing and fine tuning.
 
 ## Overview
 This production-grade three-tier architecture is designed for **high availability**, **scalability**, and **resilience**.  
