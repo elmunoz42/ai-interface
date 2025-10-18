@@ -8,6 +8,9 @@ langchain==0.2.11
 langchain-community==0.2.10
 langchain-openai==0.1.17
 
+# Hugging Face for Fine-tuned Models
+huggingface-hub>=0.34.0
+
 # Vector Store and Embeddings
 faiss-cpu==1.8.0
 sentence-transformers==3.0.1
