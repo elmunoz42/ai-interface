@@ -45,6 +45,13 @@ export const sendStreamingMessage = createAsyncThunk(
         return await dispatch(sendMessage(payload)).unwrap();
       }
 
+      // Check if this is a Hugging Face model - doesn't support streaming, fall back to regular message
+      if (payload.selectedModel.id === 'llama3-ev-finetuned') {
+        console.log('🤗 Hugging Face model detected, falling back to non-streaming');
+        // For Hugging Face, we'll fall back to the regular sendMessage thunk
+        return await dispatch(sendMessage(payload)).unwrap();
+      }
+
       const input = {
         messages: payload.messages.map(msg => ({
           role: msg.role === 'ai' ? 'assistant' : msg.role,
@@ -196,7 +203,46 @@ export const sendMessage = createAsyncThunk(
         };
       }
 
-      // For non-RAG models, use existing logic
+      // Check if this is a Hugging Face model query
+      if (payload.selectedModel.id === 'llama3-ev-finetuned') {
+        console.log('🤗 Using Hugging Face endpoint for query');
+        
+        // Get the last user message
+        const userMessage = payload.messages[payload.messages.length - 1];
+        if (!userMessage || userMessage.role !== 'user') {
+          throw new Error('No user message found for Hugging Face query');
+        }
+
+        // Call Django Hugging Face endpoint
+        const hfResponse = await fetch('http://127.0.0.1:8000/api/chat/huggingface/chat/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: userMessage.text,
+            temperature: payload.temperature,
+            max_tokens: payload.maxTokens,
+            system_prompt: payload.systemPrompt
+          }),
+        });
+
+        if (!hfResponse.ok) {
+          const errorData = await hfResponse.json();
+          throw new Error(`Hugging Face API error: ${errorData.error || errorData.message || 'Unknown error'}`);
+        }
+
+        const hfData = await hfResponse.json();
+        console.log('✅ Hugging Face response received:', hfData);
+
+        return {
+          text: hfData.response || 'No response from Hugging Face model',
+          role: 'ai',
+          timestamp: Date.now()
+        };
+      }
+
+      // For non-RAG, non-HF models, use existing logic
       const input = {
         messages: payload.messages.map(msg => ({
           role: msg.role === 'ai' ? 'assistant' : msg.role,

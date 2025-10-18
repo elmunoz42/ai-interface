@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export type LLMProvider = 'cloudflare' | 'openai';
+export type LLMProvider = 'cloudflare' | 'openai' | 'huggingface';
 
 export interface LLMModel {
   id: string;
@@ -33,6 +33,13 @@ const availableModels: LLMModel[] = [
     name: 'Llama 3 8B Instruct',
     provider: 'cloudflare',
     description: 'Fast and efficient model via Cloudflare Workers AI',
+    maxTokens: 4000
+  },
+  {
+    id: 'llama3-ev-finetuned',
+    name: 'Llama 3 EV Fine-tuned',
+    provider: 'huggingface',
+    description: 'Custom fine-tuned Llama 3 model for EV domain knowledge',
     maxTokens: 4000
   },
   {

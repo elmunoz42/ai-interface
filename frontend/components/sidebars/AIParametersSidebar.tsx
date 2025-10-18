@@ -242,6 +242,7 @@ const AIParametersSidebar = () => {
     switch (provider) {
       case 'openai': return '#10A37F';
       case 'cloudflare': return '#F38020';
+      case 'huggingface': return '#FFD21E';
       case 'faiss': return '#4A90E2';
       default: return '#666';
     }
@@ -251,6 +252,7 @@ const AIParametersSidebar = () => {
     switch (provider) {
       case 'openai': return 'OpenAI';
       case 'cloudflare': return 'Cloudflare';
+      case 'huggingface': return 'Hugging Face';
       case 'faiss': return 'FAISS';
       default: return provider;
     }
