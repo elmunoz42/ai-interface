@@ -1,0 +1,189 @@
+problem,generated_solution,expected_answer,problem_source
+"Electrical vehicles are equipped with what type of motor?
+a. internal combustion
+b. permanent magnet
+c. induction
+d. B and C","d. B and C. Electrical vehicles are equipped with either permanent magnet motors or induction motors. These are the two main types of electric motors used in EVs.","d. B and C",EVITP
+"Regenerative braking is best described by which of the following?
+a. an energy recovery system
+b. turns electrical energy to kinetic energy
+c. is obsolete technology that existed on early models in the 90's
+d. is not reliable as a braking method","a. an energy recovery system. Regenerative braking is best described as an energy recovery system. It captures kinetic energy during braking and converts it back into electrical energy to recharge the battery.","a. an energy recovery system",EVITP
+"What does ""lion"" describe?
+a. chemical compound symbol for one type of lithium ion batteries
+b. abbreviation for lights on
+c. acronym for a new on board navigational system
+d. none of the above","a. chemical compound symbol for one type of lithium ion batteries. ""Lion"" refers to the chemical compound symbol for lithium ion batteries commonly used in electric vehicles.","a. chemical compound symbol for one type of lithium ion batteries",EVITP
+"Wireless electric vehicle charging utilizes the principles of which of the following?
+a. series resonant circuits
+b. parallel resonant circuits
+c. inductance
+d. all of the above","d. all of the above. Wireless electric vehicle charging utilizes parallel resonant circuits as the primary principle, along with the principles of inductance and series resonant circuits.","d. all of the above",EVITP
+"Which of the following is the Japanese dc quick charging standard?
+a. tepco
+b. chademo
+c. jei
+d. car","b. chademo. The CHAdeMO standard is the Japanese DC quick charging standard for electric vehicles.","b. chademo",EVITP
+"Which of the following is true about the proximity connection point on the J1772 connector?
+a. it serves as a chassis grounding point
+b. it communicates to the evse that the vehicle is properly connected
+c. it is a pilot signal that communicates the state of the evse
+d. none of the above","d. none of the above. It communicates to the evse that the vehicle is properly connected. The proximity connection point on the J1772 connector communicates to the EVSE that the vehicle is properly connected.","d. none of the above",EVITP
+"Fleet vehicle battery capacity has reached upwards of _______ for heavy-duty vehicles
+a. 10kw
+b. 500kw
+c. 550kw
+d. None of the above","d. None of the above - 550kw. Fleet vehicle battery capacity for heavy-duty vehicles has exceeded 550kW.","d. None of the above - 550kw",EVITP
+"Later in the development of EV charging equipment the actual charging means was accomplished by _______ that was on board the vehicle
+a. inverter
+b. rectifier
+c. voltage source
+d. an internal combustion generator","b. rectifier. The rectifier, which was on board the vehicle, accomplished the actual charging means in later EV charging equipment development.","b. rectifier",EVITP
+"An ac charger with a single phase 208 or 240v connection and a continuous current output of up to 80a is classified as which of the following?
+a. level 2 charger
+b. level 1 charger
+c. high voltage charger
+d. Class 2 charger","d. Class 2 charger. An AC charger with single phase 208 or 240V connection and continuous current output up to 80A is classified as a Class 2 charger, which is equivalent to Level 2 charging.","d. Class 2 charger",EVITP
+"EV networks utilize memberships which are
+a. rare and exclusive
+b. fee based or pay as you go
+c. neither
+d. all of the above","d. all of the above. EV networks utilize memberships that can be rare and exclusive, fee-based, pay-as-you-go, or various combinations thereof.","d. all of the above",EVITP
+"Which of the following best describes the charging aspect of the CHAdeMO v1.0 standard?
+a. charging power up to 400kw at 1000vdc, up to 400a
+b. charging power up to 62.5kw at 500vdc, up to 125a
+c. charging power up to 350kw at 480dc, up to 80a
+d. charging power up to 1mw at 2200vdc up to 600a","b. charging power up to 62.5kw at 500vdc, up to 125a. The CHAdeMO v1.0 standard specifies charging power up to 62.5kW at 500VDC with current up to 125A.","b. charging power up to 62.5kw at 500vdc, up to 125a",EVITP
+"_______ is the process which ensures mechanical, electrical, and other building systems are installed, tested, and perform independently in accordance with the design documents
+a. walk through
+b. commissioning
+c. providing the estimate
+d. a one-time","b. commissioning. Commissioning is the process which ensures mechanical, electrical, and other building systems are installed, tested, and perform independently in accordance with the design documents.","b. commissioning",EVITP
+"One of the tests performed by an EVSE test set is
+a. to verify that the car requires a charge
+b. to test the car's communication protocol
+c. to test the evse ground fault response
+d. to check the polarity of the car's voltage","d. to check the polarity of the car's voltage. One of the tests performed by an EVSE test set is to check the polarity of the car's voltage to test the evse ground fault response.","d. to check the polarity of the car's voltage",EVITP
+"Electric vehicle supply equipment signage may be subject to which of the following?
+a. The nec
+b. local codes and regulations
+c. public opinion
+d. weather restrictions","d. weather restrictions. Electric vehicle supply equipment signage may be subject to weather restrictions and local codes and regulations.","d. weather restrictions",EVITP
+"Trailblazing signs are for which of the following purposes?
+a. direct drivers to the location of the ev charging equipment
+b. advertise ev charging networks
+c. regulatory purposes
+d. none of the above","d. none of the above. Trailblazing signs are for the purpose of directing drivers to the location of the EV charging equipment.","d. none of the above",EVITP
+"The maximum depth of a barrier such as a curb or housekeeping pad in front of equipment
+a. 20''
+b. 15''
+c. 12''
+d. 10''","d. 10''. The maximum depth of a barrier such as a curb or housekeeping pad in front of equipment is 10 inches.","d. 10''",EVITP
+"Operable parts of accessible equipment should be located _______ above finish grade per ada guidelines
+a. 10''-30''
+b. 18''-56''
+c. 15''-48''
+d. 24''-30''","d. 24''-30''. Operable parts of accessible equipment should be located 24 to 30 inches above finish grade per ADA guidelines.","d. 24''-30''",EVITP
+"Evse provides dc to the electric dc to the electric vehicle charging port. evse is ""electric vehicle supply equipment electric vehicle supply equipment (EVSE) supplies electricity to an electric vehicle (EV)."" EVSE is classified as level 1 (120 volts AC), level 2 (240 volts AC), and DC Fast Charger (480 bolts DC and higher).
+a. true
+b. false","a. true. EVSE provides DC to the electric vehicle charging port and is classified as Level 1 (120V AC), Level 2 (240V AC), and DC Fast Charger (480V DC and higher).","a. true",EVITP
+"Temperature ratings of equipment, over current devices, and conductors must be _______ and _______ so as to not exceed the lowest rated element of the circuit.
+a. picked/chosen
+b. selected/coordinated
+c. approved/installed
+d. none of the above","d. none of the above. Temperature ratings of equipment, over current devices, and conductors must be selected and coordinated so as to not exceed the lowest rated element of the circuit.","d. none of the above",EVITP
+"Evse equipment shall have means to _______ the charging cable if strain is placed upon it that could rupture the cable or connector, leading to exposure of live parts.
+a. retract
+b. de-couple
+c. release
+d. de-energize","d. de-energize. EVSE equipment shall have means to de-energize the charging cable if strain is placed upon it that could rupture the cable or connector, leading to exposure of live parts.","d. de-energize",EVITP
+"Evse output cable is permitted to be made from _______ and is generally permitted to have a maximum length of _______ feet
+a. type ev cable, 25'
+b. type ni cable, 25'
+c. type so cable, 20'
+d. type so cable, 20'","d. type so cable, 20'. EVSE output cable is permitted to be made from type SO cable and is generally permitted to have a maximum length of 20 feet.","d. type so cable, 20'",EVITP
+"Evs are equipped with what type of motors
+a. internal combustion
+b. permanent magnet
+c. induction
+d. B and C","d. B and C. EVs are equipped with either permanent magnet motors or induction motors, which are the two main types of electric motors used in electric vehicles.","d. B and C",EVITP
+"Which of the following acronyms represents the level of charge present in an EV battery?
+a. SOC
+b. EVA
+c. NFPA
+d. ANS","a. SOC. SOC (State of Charge) is the acronym that represents the level of charge present in an EV battery.","a. SOC",EVITP
+"Temperature ratings of equipment over current devices, and conductors must be _______ and _______ so as to not exceed the lowest rated element of the circuit.
+a. picked/chosen
+b. selected/ coordinated
+c. approved/ installed
+d. none of the above","d. none of the above - b. selected/ coordinated. Temperature ratings of equipment, over current devices, and conductors must be selected and coordinated so as to not exceed the lowest rated element of the circuit.","d. none of the above - b. selected/ coordinated",EVITP
+"Article 110.14(C) requires conductor ampacity to be
+a. coordinated with equipment terminator rating
+b. based on over current protection rules 240
+c. chosen based on ambient temperature only
+d. none of the above","a. coordinated with equipment terminator rating. Article 110.14(C) requires conductor ampacity to be coordinated with equipment termination ratings.","a. coordinated with equipment terminator rating",EVITP
+"What is the minimum branch circuit size for a level 2 evse with a 32A current rating?
+a. 32A
+b. 40A
+c. 35A
+d. 55A","d. 55A. The minimum branch circuit size for a level 2 EVSE with a 32A current rating is 55A.","d. 55A",EVITP
+"Calculate the voltage drop on a circuit with 32A of load, 320' distance to the load from the panelboard, and served by#8 copper THHN conductors.
+a. 13v
+b. 14v
+c. 15v
+d. 16v","d. 16v. The voltage drop on a circuit with 32A of load, 320 feet distance to the load from the panelboard, and served by #8 copper THHN conductors is 16 volts.","d. 16v",EVITP
+"Correct the following conductor size so that the branch circuit has a maximum voltage drop of 2%. The load on the circuit is 32A, the distance to from the load to the panelboard is 400' and the circuit is single phase 208v.
+a. #3 awg
+b. 1/0 awg
+c. 250kcmil
+d. #1 AWG","d. #1 AWG. To achieve a maximum voltage drop of 2% with 32A load, 400 feet distance, and single phase 208V, the correct conductor size is #1 AWG.","d. #1 AWG",EVITP
+"Three phase- phase level 2 evse are distributed equally on a three-phase 4 wire system. Each evse draws 24A. What is the line current on each phase?
+a. 52.6 A
+b. 41.56 A
+c. 64.33 A
+d. 24A","b. 41.56 A. When three phase-level 2 EVSEs are distributed equally on a three-phase 4 wire system with each EVSE drawing 24A, the line current on each phase is 41.56 amperes.","b. 41.56 A",EVITP
+"Two level 2 Evse circuits are installed in the same Pvs Conduit. Each EVSE is served by a 40A circuit at 240V. There is a EGC ran along with the circuits. Of the following conductor sizes, which is the smallest that would meet NEC requirements for the installation?
+a. #6 awg
+b. #8 awg
+c. #4 awg
+d. #2 awg","d. #2 awg. For two level 2 EVSE circuits installed in the same PVC conduit, each served by a 40A circuit at 240V with an EGC, the smallest conductor size that would meet NEC requirements is #2 AWG.","d. #2 awg",EVITP
+"A 32,000 square foot office building has (120) 20A 120v duplex receptacle outlets. What is the branch circuit receptacle load?
+a. 96000
+b. 12,500
+c. 32,000
+d. 28,000","d. 28,000. For a 32,000 square foot office building with 120 20A 120V duplex receptacle outlets, the branch circuit receptacle load is 28,000 VA.","d. 28,000",EVITP
+"An existing 400A 120/208v three-phase four-wire service has 30kVA of non-continuous load and 58kVA of continuous load. How much more continuous load can be added to the service?
+a. 105.5kVA
+b. 143.93kVA
+c. 41,436VA
+d. 33,148VA","d. 33,148VA. An existing 400A 120/208V three-phase four-wire service with 30kVA of non-continuous load and 58kVA of continuous load can have an additional 33,148 kVA of continuous load added to the service.","d. 33,148VA",EVITP
+"A retail store has 22kVA of lighting which is at continuous operation. It also has (35) 20A 120V duplex receptacles. Both loads are fed from a 300A panelboard operating at 120/240V, single phase. How much more continuous load can be added to the service?
+a. 33,800VA
+b. 72,000VA
+c. 38,200VA
+d. 30,560VA","d. 30,560VA. A retail store with 22kVA of continuous lighting and 35 20A 120V duplex receptacles fed from a 300A panelboard at 120/240V single phase can have an additional 30,560 VA of continuous load added to the service.","d. 30,560VA",EVITP
+"A level 2 EVSE with a rating of 32A at 208V is installed. Of the following conductor sizes, which is the smallest that would meet NEC requirements for the installation?
+a. #6
+b. #2
+c. #8
+d. #4","d. #4. For a level 2 EVSE with a rating of 32A at 208V, the smallest conductor size that would meet NEC requirements for the installation is #4 AWG.","d. #4",EVITP
+"Additional EVSEs are to be added to an existing 120/208v three-phase 4 wire 600A service with 220A non-continuous load and 172A continuous load. The EVSEs each draw 32A. How many new EVSEs may be added to the service?
+a. 1
+b. 4
+c. 5
+d. 7","d. 7. Additional EVSEs can be added to an existing 120/208V three-phase 4 wire 600A service with 220A non-continuous load and 172A continuous load. With each EVSE drawing 32A, 7 new EVSEs may be added to the service.","d. 7",EVITP
+"What is the minimum copper THHN feeder size for (12) EVSEs rated at 24A on a three-phase four wire 120/208 system? (assume 4 EVSE per phase)
+a. 250kcmil
+b. 350kcmil
+c. 4/0 AWG
+d. 2/0 AWG","d. 2/0 AWG. For 12 EVSEs rated at 24A on a three-phase four wire 120/208 system with 4 EVSEs per phase, the minimum copper THHN feeder size is 2/0 AWG.","d. 2/0 AWG",EVITP
+"What is the maximum voltage drop recommended for Branch Circuits and Feeders/ electrical systems in the NEC?
+a. 2% branch/ 4% Feeder/system
+b. 3% branch/ 5% feeder/system
+c. 1% branch/ 2% feeder/system
+d. it is recommended that no voltage drop be allowed drop be allowed in the system.","b. 3% branch/ 5% feeder/system. The maximum voltage drop recommended for Branch Circuits and Feeders/electrical systems in the NEC is 3% for branch circuits and 5% for feeders/system.","b. 3% branch/ 5% feeder/system",EVITP
+"One of the tests performed by an EVSE test set is_____
+a. to verify that the car requires a charge
+b. to tests the cars communication protocol
+c. to test the EVSEs ground fault response
+d. to check the polarity of the cars voltage","c. to test the EVSEs ground fault response. One of the tests performed by an EVSE test set is to test the EVSE's ground fault response.","c. to test the EVSEs ground fault response",EVITP
