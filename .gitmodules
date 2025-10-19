@@ -1,0 +1,3 @@
+[submodule "huggingface-space"]
+	path = huggingface-space
+	url = https://huggingface.co/spaces/elmunoz42/llama3-ev-finetuned
