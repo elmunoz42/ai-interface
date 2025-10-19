@@ -10,6 +10,7 @@ langchain-openai==0.1.17
 
 # Hugging Face for Fine-tuned Models
 huggingface-hub>=0.34.0
+gradio-client>=0.10.0
 
 # Vector Store and Embeddings
 faiss-cpu==1.8.0
