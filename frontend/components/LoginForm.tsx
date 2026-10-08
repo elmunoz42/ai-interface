@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, Typography, TextField, Button, Alert, Box } from '@mui/material';
+import { DJANGO_API_URL } from '../lib/backend-api';
 
 const LoginForm = () => {
   const [username, setUsername] = useState('');
@@ -9,7 +10,7 @@ const LoginForm = () => {
 
   // Fetch CSRF token before login
   const fetchCsrfToken = async () => {
-    await fetch('http://localhost:8000/api/rag/csrf/', {
+    await fetch(`${DJANGO_API_URL}/api/rag/csrf/`, {
       credentials: 'include',
     });
   };
@@ -27,7 +28,7 @@ const LoginForm = () => {
     await fetchCsrfToken();
     try {
       const csrfToken = getCookie('csrftoken');
-      const res = await fetch('http://localhost:8000/api/rag/auth/login/', {
+      const res = await fetch(`${DJANGO_API_URL}/api/rag/auth/login/`, {
         method: 'POST',
         credentials: 'include',
         headers: {

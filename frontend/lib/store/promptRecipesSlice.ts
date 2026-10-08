@@ -67,6 +67,16 @@ const initialState: PromptRecipesState = {
       temperature: 0.4,
       maxTokens: 300,
       isEditing: false
+    },
+    {
+      id: 'EVITP specialist',
+      title: 'EVITP Specialist',
+      description: 'Get expert answers on Electric Vehicle Infrastructure Training Program (EVITP)',
+      prompt: 'You are an expert in the Electric Vehicle Infrastructure Training Program (EVITP). \nQUESTION:\n',
+      modelId: 'llama3-ev-finetuned',
+      temperature: 0.2,
+      maxTokens: 300,
+      isEditing: false
     }
   ],
   editingRecipeId: null

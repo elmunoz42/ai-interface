@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { apolloClient, CREATE_CHAT_COMPLETION } from '../apollo-client';
 import type { LLMModel } from './aiParamsSlice';
+import { DJANGO_API_URL } from '../backend-api';
 
 // Types
 export interface Message {
@@ -8,6 +9,13 @@ export interface Message {
   role: string;
   timestamp?: number;
   streaming?: boolean;
+  references?: MessageReference[];
+}
+
+export interface MessageReference {
+  content: string;
+  source: string;
+  page?: number;
 }
 
 export interface ChatState {
@@ -176,7 +184,7 @@ export const sendMessage = createAsyncThunk(
         }
 
         // Call Django RAG endpoint
-        const ragResponse = await fetch('http://127.0.0.1:8000/api/rag/chat/', {
+        const ragResponse = await fetch(`${DJANGO_API_URL}/api/rag/chat/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -196,10 +204,30 @@ export const sendMessage = createAsyncThunk(
         const ragData = await ragResponse.json();
         console.log('✅ RAG response received:', ragData);
 
+        const references: MessageReference[] = Array.isArray(ragData.context_documents)
+          ? ragData.context_documents
+              .filter((document: any) => typeof document?.content === 'string')
+              .map((document: any) => {
+                const rawSource = typeof document.metadata?.source === 'string'
+                  ? document.metadata.source
+                  : 'Knowledge base document';
+                const source = rawSource.split(/[\\/]/).pop() || rawSource;
+                const rawPage = document.metadata?.page;
+
+                return {
+                  content: document.content,
+                  source,
+                  // Document loaders use zero-based page indexes.
+                  page: typeof rawPage === 'number' ? rawPage + 1 : undefined,
+                };
+              })
+          : [];
+
         return {
           text: ragData.response || 'No response from RAG system',
           role: 'ai',
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          references
         };
       }
 
@@ -214,7 +242,7 @@ export const sendMessage = createAsyncThunk(
         }
 
         // Call Django Hugging Face endpoint
-        const hfResponse = await fetch('http://127.0.0.1:8000/api/chat/huggingface/chat/', {
+        const hfResponse = await fetch(`${DJANGO_API_URL}/api/chat/huggingface/chat/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

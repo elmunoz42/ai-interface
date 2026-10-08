@@ -18,6 +18,7 @@ from langchain_community.embeddings import SentenceTransformerEmbeddings
 from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
+from docx import Document as DocxDocument
 
 from django.conf import settings
 
@@ -42,6 +43,13 @@ class DocumentProcessor:
                 loader = PyPDFLoader(file_path)
             elif file_extension in ['.txt', '.md']:
                 loader = TextLoader(file_path)
+            elif file_extension == '.docx':
+                docx = DocxDocument(file_path)
+                text = "\n".join(paragraph.text for paragraph in docx.paragraphs)
+                documents = [Document(page_content=text, metadata={"source": file_path})]
+                chunks = self.text_splitter.split_documents(documents)
+                logger.info(f"Loaded {len(chunks)} chunks from {file_path}")
+                return chunks
             else:
                 raise ValueError(f"Unsupported file format: {file_extension}")
             

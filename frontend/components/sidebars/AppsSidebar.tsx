@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Typography, Button, Modal, TextField, Chip, Alert } from '@mui/material';
+import { DJANGO_API_URL } from '../../lib/backend-api';
 
 const apps = [
 	{
@@ -83,7 +84,7 @@ const AppsSidebar = () => {
 									 const formData = new FormData();
 									 formData.append('file', file);
 									 try {
-										 const res = await fetch('http://localhost:8000/api/rag/meeting-followup/', {
+										 const res = await fetch(`${DJANGO_API_URL}/api/rag/meeting-followup/`, {
 											 method: 'POST',
 											 body: formData,
 										 });

@@ -13,6 +13,9 @@ frontend/dist/
 .pnp.js
 .yarn/install-state.gz
 
+# Hugging Face Spaces
+huggingface-space/
+
 # Testing
 /coverage
 

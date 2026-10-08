@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import LoginForm from '../LoginForm';
+import { DJANGO_API_URL } from '../../lib/backend-api';
 
 const AuthNav = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -11,7 +12,7 @@ const AuthNav = () => {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/rag/status/', { credentials: 'include' });
+        const res = await fetch(`${DJANGO_API_URL}/api/rag/status/`, { credentials: 'include' });
         setIsAuthenticated(res.status === 200);
       } catch {
         setIsAuthenticated(false);
@@ -21,7 +22,7 @@ const AuthNav = () => {
   }, []);
 
   const handleLogout = async () => {
-    await fetch('http://127.0.0.1:8000/admin/logout/', { credentials: 'include' });
+    await fetch(`${DJANGO_API_URL}/admin/logout/`, { credentials: 'include' });
     setIsAuthenticated(false);
   };
 

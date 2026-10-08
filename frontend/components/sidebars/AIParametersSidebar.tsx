@@ -39,6 +39,7 @@ import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import DownloadIcon from '@mui/icons-material/Download';
 import { CloudUpload } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../../lib/store/hooks';
+import { DJANGO_API_URL } from '../../lib/backend-api';
 import { 
   setTemperature, 
   setMaxTokens, 
@@ -74,7 +75,7 @@ const AIParametersSidebar = () => {
     setModalFile(file);
     setModalLoading(true);
     try {
-  const res = await fetch(`http://localhost:8000/api/rag/file/${file.id}/`, { credentials: 'include' });
+  const res = await fetch(`${DJANGO_API_URL}/api/rag/file/${file.id}/`, { credentials: 'include' });
       if (res.ok) {
         if (file.content_type && file.content_type.startsWith('text')) {
           const text = await res.text();
@@ -93,13 +94,13 @@ const AIParametersSidebar = () => {
 
   // Download file securely
   const handleFileDownload = (file: any) => {
-    window.open(`http://localhost:8000/api/rag/file/${file.id}/`, '_blank');
+    window.open(`${DJANGO_API_URL}/api/rag/file/${file.id}/`, '_blank');
   };
   const [tabIndex, setTabIndex] = useState(0);
   const [kbFiles, setKbFiles] = useState<any[]>([]);
   // Fetch knowledge base files when Knowledge Base tab is selected
   const fetchKbFiles = () => {
-    fetch('http://127.0.0.1:8000/api/rag/documents/')
+    fetch(`${DJANGO_API_URL}/api/rag/documents/`, { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
         // DRF paginated response: { count, next, previous, results }
@@ -128,7 +129,7 @@ const AIParametersSidebar = () => {
   const handleFileDelete = async (file: any) => {
     if (!window.confirm(`Delete "${file.filename}" from knowledge base? This cannot be undone.`)) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/rag/file/${file.id}/`, {
+      const res = await fetch(`${DJANGO_API_URL}/api/rag/file/${file.id}/`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
@@ -194,9 +195,10 @@ const AIParametersSidebar = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/rag/upload/', {
+      const response = await fetch(`${DJANGO_API_URL}/api/rag/upload/`, {
         method: 'POST',
         body: formData,
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -204,6 +206,7 @@ const AIParametersSidebar = () => {
         setUploadStatus('success');
         setUploadMessage(`Successfully uploaded "${file.name}" to knowledge base!`);
         console.log('File uploaded successfully:', result);
+        fetchKbFiles();
         
         // Clear success message after 5 seconds
         setTimeout(() => {
@@ -211,9 +214,11 @@ const AIParametersSidebar = () => {
           setUploadMessage('');
         }, 5000);
       } else {
-        const error = await response.json();
+        const error = await response.json().catch(() => ({}));
+        const errorDetail = error.message || error.error || error.detail ||
+          (Array.isArray(error.file) ? error.file.join(' ') : undefined);
         setUploadStatus('error');
-        setUploadMessage(`Upload failed: ${error.message || 'Unknown error occurred'}`);
+        setUploadMessage(`Upload failed: ${errorDetail || 'Unknown error occurred'}`);
         console.error('Upload failed:', error);
         
         // Clear error message after 8 seconds
@@ -459,54 +464,6 @@ const AIParametersSidebar = () => {
                 />
               </Box>
 
-              {/* Document Upload */}
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle2" gutterBottom>
-                  Knowledge Base
-                </Typography>
-                <Button
-                  component="label"
-                  variant="outlined"
-                  startIcon={<CloudUpload />}
-                  fullWidth
-                  disabled={uploadStatus === 'uploading'}
-                  sx={{ 
-                    mb: 1,
-                    textTransform: 'none',
-                    borderColor: '#4A90E2',
-                    color: '#4A90E2',
-                    '&:hover': {
-                      borderColor: '#357ABD',
-                      backgroundColor: 'rgba(74, 144, 226, 0.04)'
-                    },
-                    '&:disabled': {
-                      borderColor: '#ccc',
-                      color: '#999'
-                    }
-                  }}
-                >
-                  {uploadStatus === 'uploading' ? 'Uploading...' : 'Upload PDF'}
-                  <input
-                    type="file"
-                    accept=".pdf,.docx,.txt,.md"
-                    onChange={handleFileUpload}
-                    style={{ display: 'none' }}
-                    disabled={uploadStatus === 'uploading'}
-                  />
-                </Button>
-                {/* Upload Status Message */}
-                {uploadStatus !== 'idle' && (
-                  <Alert 
-                    severity={uploadStatus === 'success' ? 'success' : uploadStatus === 'error' ? 'error' : 'info'}
-                    sx={{ mb: 1, fontSize: '0.75rem' }}
-                  >
-                    {uploadMessage}
-                  </Alert>
-                )}
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', lineHeight: 1.3 }}>
-                  Supports PDF, DOCX, TXT and MD files.
-                </Typography>
-              </Box>
             </>
           )}
         </>
@@ -515,6 +472,40 @@ const AIParametersSidebar = () => {
       {tabIndex === 1 && (
         <>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Add to knowledge base
+              </Typography>
+              <Button
+                component="label"
+                variant="contained"
+                startIcon={<CloudUpload />}
+                fullWidth
+                disabled={uploadStatus === 'uploading'}
+                sx={{ mb: 1, textTransform: 'none' }}
+              >
+                {uploadStatus === 'uploading' ? 'Adding document...' : 'Add document'}
+                <input
+                  type="file"
+                  accept=".pdf,.docx,.txt,.md"
+                  onChange={handleFileUpload}
+                  style={{ display: 'none' }}
+                  disabled={uploadStatus === 'uploading'}
+                />
+              </Button>
+              {uploadStatus !== 'idle' && (
+                <Alert
+                  severity={uploadStatus === 'success' ? 'success' : uploadStatus === 'error' ? 'error' : 'info'}
+                  sx={{ mb: 1, fontSize: '0.75rem' }}
+                >
+                  {uploadMessage}
+                </Alert>
+              )}
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', lineHeight: 1.3 }}>
+                PDF, DOCX, TXT, or MD up to 10 MB
+              </Typography>
+            </Box>
+
             {kbFiles.length === 0 ? (
               <Box sx={{ p: 2, textAlign: 'center', color: 'text.secondary' }}>No files uploaded.</Box>
             ) : (
